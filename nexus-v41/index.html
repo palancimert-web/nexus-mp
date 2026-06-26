@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="NEXUS"/>
+<meta name="theme-color" content="#060A14"/>
+<title>NEXUS · Mert</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#060A14;--surface:#0C1220;--panel:#111827;--border:#1A2638;--muted:#243347;
+  --text:#E8EDF5;--sub:#5A7A9A;--accent:#7B6FFA;--cyan:#00CFFF;--green:#00F59C;
+  --red:#FF5F5F;--yellow:#FFB300;--orange:#FF7A30;--purple:#C084FC;
+  --font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);}body{padding-top:env(safe-area-inset-top,0px);}
+#app{display:flex;flex-direction:column;height:100dvh;}
+#topbar{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.logo{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--accent);letter-spacing:3px;}
+.logo span{color:var(--cyan);}
+#clockbadge{font-family:var(--mono);font-size:10px;color:var(--sub);background:var(--panel);border:1px solid var(--border);padding:3px 8px;border-radius:20px;}
+#statuslbl-wrap{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--sub);background:var(--panel);border:1px solid var(--border);padding:3px 8px;border-radius:20px;margin-left:auto;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+#main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+#view{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#view::-webkit-scrollbar{display:none;}
+#bottomnav{display:flex;background:var(--surface);border-top:1px solid var(--border);padding:6px 0 calc(var(--sb)+6px);flex-shrink:0;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:4px 0;color:var(--sub);font-size:8px;font-family:var(--mono);transition:color .15s;}
+.nav-btn .ni{font-size:18px;line-height:1;}
+.nav-btn.active{color:var(--accent);}
+.nav-btn.active .ni{filter:drop-shadow(0 0 5px var(--accent));}
+#inputbar{padding:10px 12px calc(var(--sb)+10px);background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;display:none;}
+.mode-row{display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;}
+.mode-row::-webkit-scrollbar{display:none;}
+.mchip{flex-shrink:0;padding:4px 10px;border-radius:20px;font-size:10px;font-family:var(--mono);border:1px solid var(--border);color:var(--sub);background:none;cursor:pointer;transition:all .15s;}
+.mchip.on{color:#fff;border-color:transparent;}
+.input-row{display:flex;gap:8px;align-items:flex-end;}
+#msginput{flex:1;background:var(--panel);border:1.5px solid var(--border);border-radius:14px;padding:10px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;resize:none;max-height:100px;line-height:1.5;transition:border-color .2s;}
+#msginput:focus{border-color:var(--accent);}
+#msginput::placeholder{color:var(--sub);}
+#sendbtn{width:42px;height:42px;border-radius:13px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--cyan));border:none;cursor:pointer;font-size:18px;color:#fff;display:flex;align-items:center;justify-content:center;transition:opacity .2s;box-shadow:0 4px 16px rgba(123,111,250,.35);}
+#sendbtn:disabled{opacity:.3;box-shadow:none;}
+.pad{padding:16px;}
+.sec-hdr{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:12px;}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:10px;}
+.card-hdr{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.02);}
+.card-icon{font-size:15px;}
+.card-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--sub);font-family:var(--mono);}
+.card-body{padding:12px 14px;font-size:13px;line-height:1.7;}
+.card-body p{margin-bottom:5px;}
+.card-body p:last-child{margin-bottom:0;}
+
+/* BULLETIN */
+.bul-wrap{padding:14px;display:flex;flex-direction:column;gap:10px;padding-bottom:24px;}
+.bul-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:65vh;gap:14px;}
+.bul-loading-icon{font-size:38px;animation:rot 2s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg)}}
+.bul-header{background:linear-gradient(135deg,rgba(123,111,250,.15),rgba(0,207,255,.08));border:1px solid rgba(123,111,250,.25);border-radius:16px;padding:14px;display:flex;align-items:center;justify-content:space-between;}
+.bul-edition{font-size:10px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;}
+.bul-title{font-size:16px;font-weight:700;}
+.bul-date{font-size:10px;color:var(--sub);margin-top:2px;font-family:var(--mono);}
+.market-row{display:flex;gap:5px;flex-wrap:wrap;padding:8px 12px 4px;}
+.mpill{flex:1;min-width:68px;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:7px 9px;}
+.mpill-label{font-size:8px;font-family:var(--mono);color:var(--sub);text-transform:uppercase;margin-bottom:2px;}
+.mpill-val{font-size:12px;font-weight:700;font-family:var(--mono);}
+.mpill-chg{font-size:9px;font-family:var(--mono);}
+.up{color:var(--green);}.dn{color:var(--red);}.fl{color:var(--sub);}
+.refresh-row{display:flex;gap:8px;}
+.rbtn{flex:1;padding:10px;border-radius:11px;background:var(--panel);border:1px solid var(--border);color:var(--sub);font-size:11px;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .2s;text-decoration:none;}
+.rbtn.primary{background:linear-gradient(135deg,rgba(123,111,250,.2),rgba(0,207,255,.1));border-color:rgba(123,111,250,.3);color:var(--text);}
+.rbtn:active{opacity:.75;}
+.pf-mini-row{display:flex;align-items:center;gap:8px;padding:6px 14px;border-bottom:1px solid rgba(26,38,56,.5);}
+.pf-mini-row:last-child{border-bottom:none;}
+.pf-mini-tick{font-family:var(--mono);font-size:11px;font-weight:700;width:46px;flex-shrink:0;}
+.pf-mini-qty{font-size:10px;color:var(--sub);flex:1;font-family:var(--mono);}
+.pf-mini-total{font-size:11px;font-family:var(--mono);font-weight:600;}
+
+/* QUOTE */
+.quote-card{background:linear-gradient(135deg,rgba(192,132,252,.08),rgba(123,111,250,.05));border:1px solid rgba(192,132,252,.2);border-radius:14px;padding:16px;}
+.quote-text{font-size:14px;line-height:1.7;color:var(--text);font-style:italic;margin-bottom:8px;}
+.quote-author{font-size:11px;color:var(--purple);font-family:var(--mono);}
+
+/* WHOOP */
+.whoop-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:12px 14px;}
+.wcard{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}
+.wcard-icon{font-size:20px;margin-bottom:4px;}
+.wcard-val{font-size:18px;font-weight:700;font-family:var(--mono);}
+.wcard-lbl{font-size:9px;color:var(--sub);font-family:var(--mono);text-transform:uppercase;margin-top:2px;}
+.whoop-connect{padding:16px;text-align:center;}
+.whoop-connect p{font-size:12px;color:var(--sub);margin-bottom:12px;line-height:1.5;}
+.connect-btn{display:inline-block;padding:11px 20px;border-radius:11px;background:linear-gradient(135deg,var(--accent),var(--cyan));color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:var(--font);}
+
+/* MORTY */
+.morty-header{display:flex;align-items:center;gap:12px;padding:14px;}
+.morty-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#EC4899);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.morty-name{font-size:16px;font-weight:700;}
+.morty-breed{font-size:11px;color:var(--sub);font-family:var(--mono);}
+.morty-age{font-size:11px;color:var(--cyan);font-family:var(--mono);}
+.vet-list{display:flex;flex-direction:column;gap:6px;padding:0 14px 14px;}
+.vet-item{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:9px 12px;}
+.vet-icon{font-size:16px;width:24px;text-align:center;}
+.vet-text{flex:1;font-size:12px;}
+.vet-freq{font-size:10px;color:var(--sub);font-family:var(--mono);}
+
+/* BIRTHDAY */
+.bday-list{display:flex;flex-direction:column;gap:8px;}
+.bday-item{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
+.bday-emoji{font-size:24px;flex-shrink:0;}
+.bday-info{flex:1;}
+.bday-name{font-size:13px;font-weight:600;}
+.bday-date{font-size:11px;color:var(--sub);font-family:var(--mono);}
+.bday-days{font-size:11px;font-family:var(--mono);font-weight:700;}
+.bday-add{width:100%;padding:11px;border-radius:11px;background:var(--panel);border:1.5px dashed var(--border);color:var(--sub);font-size:12px;font-family:var(--font);cursor:pointer;margin-top:8px;transition:all .2s;}
+.bday-add:active{border-color:var(--accent);color:var(--text);}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;gap:12px;padding:14px;}
+.msg{display:flex;gap:10px;}
+.msg.user{flex-direction:row-reverse;}
+.avatar{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.msg.ai .avatar{background:linear-gradient(135deg,var(--accent),var(--cyan));color:#fff;}
+.msg.user .avatar{background:var(--panel);border:1px solid var(--border);color:var(--sub);}
+.mbody{flex:1;min-width:0;}
+.mmeta{font-size:9px;color:var(--sub);font-family:var(--mono);margin-bottom:3px;}
+.msg.user .mmeta{text-align:right;}
+.bubble{padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.65;word-break:break-word;}
+.msg.ai .bubble{background:var(--panel);border:1px solid var(--border);border-top-left-radius:3px;}
+.msg.user .bubble{background:rgba(123,111,250,.18);border:1px solid rgba(123,111,250,.35);border-top-right-radius:3px;}
+.bubble p{margin-bottom:5px;}
+.bubble p:last-child{margin-bottom:0;}
+.bubble strong{color:var(--accent);}
+.typing{display:flex;gap:4px;align-items:center;padding:10px 12px;}
+.typing span{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:b .9s infinite;}
+.typing span:nth-child(2){animation-delay:.15s;}
+.typing span:nth-child(3){animation-delay:.3s;}
+@keyframes b{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* PORTFOLIO */
+.pf-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.stat-card{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:12px;}
+.stat-lbl{font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--sub);margin-bottom:5px;}
+.stat-val{font-size:17px;font-weight:700;font-family:var(--mono);}
+.pf-list{display:flex;flex-direction:column;gap:5px;}
+.pf-row{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:9px 13px;display:flex;align-items:center;gap:8px;}
+.pf-tick{font-family:var(--mono);font-weight:700;font-size:12px;width:48px;}
+.pf-info{flex:1;}
+.pf-qty{font-size:10px;color:var(--sub);font-family:var(--mono);}
+.pf-cv{font-size:10px;color:var(--sub);font-family:var(--mono);}
+.pf-tot{font-family:var(--mono);font-size:12px;font-weight:600;}
+.warn-badge{font-size:8px;padding:1px 4px;border-radius:3px;background:rgba(255,95,95,.15);color:var(--red);font-family:var(--mono);}
+
+/* TASKS */
+.task-add{width:100%;background:var(--panel);border:1.5px dashed var(--border);border-radius:11px;padding:10px 13px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;margin-bottom:10px;transition:border-color .2s;}
+.task-add:focus{border-color:var(--accent);border-style:solid;}
+.task-add::placeholder{color:var(--sub);}
+.task-list{display:flex;flex-direction:column;gap:6px;}
+.task-row{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 13px;display:flex;align-items:flex-start;gap:9px;}
+.chk{width:17px;height:17px;border-radius:5px;border:1.5px solid var(--muted);flex-shrink:0;cursor:pointer;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;transition:all .2s;}
+.chk.done{background:var(--green);border-color:var(--green);color:#000;}
+.task-txt{flex:1;font-size:12px;line-height:1.5;}
+.task-txt.done{text-decoration:line-through;color:var(--sub);}
+.ttag{font-size:9px;padding:2px 6px;border-radius:20px;font-family:var(--mono);flex-shrink:0;}
+.cb-wrap{background:var(--panel);border:1px solid rgba(123,111,250,.2);border-radius:13px;padding:13px;}
+.cb-title{font-size:10px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
+.cb-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.cb-btn{padding:7px 11px;border-radius:8px;font-size:11px;font-family:var(--font);font-weight:500;cursor:pointer;border:none;display:flex;align-items:center;gap:4px;transition:transform .15s;}
+.cb-btn:active{transform:scale(.95);}
+.cb-btn.cal{background:rgba(0,245,156,.1);color:var(--green);border:1px solid rgba(0,245,156,.2);}
+.cb-btn.rem{background:rgba(255,179,0,.1);color:var(--yellow);border:1px solid rgba(255,179,0,.2);}
+.cb-btn.mail{background:rgba(0,207,255,.1);color:var(--cyan);border:1px solid rgba(0,207,255,.2);}
+.cb-btn.pf{background:rgba(123,111,250,.1);color:var(--accent);border:1px solid rgba(123,111,250,.2);}
+#toast{position:fixed;bottom:calc(var(--sb)+80px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:9px 16px;font-size:11px;font-family:var(--mono);opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:999;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.bul-step{font-size:11px;font-family:var(--mono);color:var(--sub);display:flex;align-items:center;gap:7px;transition:color .3s;}
+.bul-step.done{color:var(--green);}.bul-step.active{color:var(--cyan);}
+.bul-step-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="logo">NEX<span>US</span></div>
+    <div id="clockbadge">--:--</div>
+    <div id="statuslbl-wrap"><div class="dot"></div><span id="statuslbl">Hazır</span></div>
+  </div>
+  <div id="main">
+    <div id="view"></div>
+    <div id="inputbar">
+      <div class="mode-row" id="modechips"></div>
+      <div class="input-row">
+        <textarea id="msginput" rows="1" placeholder="NEXUS'a sor…"></textarea>
+        <button id="sendbtn" disabled>↑</button>
+      </div>
+    </div>
+  </div>
+  <div id="bottomnav">
+    <button class="nav-btn active" data-tab="bulletin" onclick="switchTab('bulletin')"><span class="ni">📋</span>Bülten</button>
+    <button class="nav-btn" data-tab="chat" onclick="switchTab('chat')"><span class="ni">◈</span>Sohbet</button>
+    <button class="nav-btn" data-tab="companies" onclick="switchTab('companies')"><span class="ni">🏢</span>Şirketler</button>
+    <button class="nav-btn" data-tab="portfolio" onclick="switchTab('portfolio')"><span class="ni">◎</span>Portföy</button>
+    <button class="nav-btn" data-tab="birthdays" onclick="switchTab('birthdays')"><span class="ni">🎂</span>D.Günleri</button>
+    <button class="nav-btn" data-tab="morty" onclick="switchTab('morty')"><span class="ni">🐾</span>Morty</button>
+    <button class="nav-btn" data-tab="tasks" onclick="switchTab('tasks')"><span class="ni">≡</span>Görevler</button>
+    <button class="nav-btn" data-tab="puro" onclick="switchTab('puro')"><span class="ni">🥃</span>Puro</button>
+  </div>
+</div>
+<div id="toast"></div>
+<script>
+const API='/api/claude', WHOOP_API='/api/whoop', CLAUDE_URL='https://claude.ai';
+const CLIENT_ID='a116c113-e06e-4049-9fda-24c47de01651';
+
+const PORTFOLIO=[
+  {t:'RZLV',q:4650,c:4.34,warn:true},
+  {t:'SENS',q:1750,c:7.69,warn:true},
+  {t:'SERV',q:961,c:8.96,warn:true},
+  {t:'SOUN',q:302,c:7.92},
+  {t:'SPCX',q:12,c:200.31},
+  {t:'COIN',q:15,c:194.77},
+  {t:'PLTR',q:14,c:136.19},
+  {t:'AVAV',q:16,c:164.08},
+  {t:'AVGO',q:3,c:383.33},
+  {t:'TMO',q:5,c:442.26},
+  {t:'LAES',q:501,c:2.84},
+  {t:'AMPG',q:1,c:2.20},
+];
+
+const WATCHLIST=[
+  'MU','MRVL','BBAI','SNDK','SPCX','NVDA','QQQ',
+  'CELC','RKLB','CRDO','MRAM','RMBS','AMD','ARM','LUV','VSH'
+];
+
+const COMPANIES=[
+  {id:'malatya',name:'Malatya Pazarı Kuruyemişçilik',icon:'🏭',
+   role:'5. Kuşak Temsilci · %100 Hissedar · Aile Şirketi',
+   desc:'Kuruyemiş, kuru meyve, lokum, yöresel tatlar, baharat · mpkuruyemis.com',
+   col:'var(--yellow)',web:'https://mpkuruyemis.com',
+   tasks:['Fabrika üretim planı','Koli/palet sevkiyat kontrolü','Online satış (mpkuruyemis.com)','Yeni ürün geliştirme','Katalog güncelleme']},
+  {id:'koolseed',name:'Koolseed',icon:'🌱',
+   role:'Co-Founder · %25 Ortak · 2M TL Yatırım',
+   desc:'%100 bitkisel, glutensiz, vegan kabak çekirdeği protein tozu · koolseed.com',
+   col:'var(--green)',meeting:'Her Salı 12:00',web:'https://koolseed.com',
+   tasks:['Salı toplantısı gündem hazırla','Satış & sipariş takibi','Pazarlama kampanyası','Yatırımcı güncelleme','Stok kontrolü']},
+  {id:'yoppy',name:'Yoppy / Mermer Foods',icon:'🥜',
+   role:'Co-Founder · %50 Ortak · Bulgaristan · 50K EUR',
+   desc:'Premium fıstık cipsi · 7 SKU · mermerfoods.com',
+   col:'var(--orange)',web:'https://mermerfoods.com',
+   tasks:['Üretim durumu kontrolü','İhracat görüşmeleri','Yeni alıcı pipeline','SKU performans analizi','Bulgaristan operasyon takibi']},
+  {id:'snackkie',name:'Snackkie',icon:'🍬',
+   role:'Co-Founder · 1M TL Yatırım',
+   desc:'Hurma bazlı sağlıklı atıştırmalık · TrueDates muadili · erken aşama',
+   col:'var(--accent)',web:'',
+   tasks:['Ürün geliştirme','TikTok kampanya planı','Ambalaj tasarımı','Pazar araştırması','Yatırımcı görüşmeleri']},
+];
+
+// Doğum günleri — Google Calendar'dan çekildi + manuel
+
+
+const MODES=[
+  {id:'chat',icon:'◈',label:'Sohbet',col:'#7B6FFA'},
+  {id:'research',icon:'⊕',label:'Araştır',col:'#00CFFF'},
+  {id:'portfolio',icon:'◎',label:'Portföy',col:'#00F59C'},
+  {id:'mail',icon:'✉',label:'Mail',col:'#FF7A30'},
+];
+
+const QUOTES=[
+  {text:"Başarı nihai değildir, başarısızlık ölümcül değildir: devam etme cesareti önemli olan.",author:"Winston Churchill"},
+  {text:"Piyasa mantıksız kalmaya, siz ödeme gücünüzü tüketmeye devam edebilirsiniz.",author:"John Maynard Keynes"},
+  {text:"Risk, ne yaptığınızı bilmemektir.",author:"Warren Buffett"},
+  {text:"Fırsat, hazırlık şansla buluştuğunda ortaya çıkar.",author:"Seneca"},
+  {text:"Bugün iyi iş yapmak için yarına kadar beklemeyin.",author:"Isaac Newton"},
+  {text:"Piyasalar her gün oy kullanır, uzun vadede tartı makinesidir.",author:"Benjamin Graham"},
+  {text:"Büyük şeyler küçük başlangıçlardan doğar.",author:"Lao Tzu"},
+  {text:"Bilge adam her şeyden öğrenir; sıradan adam deneyimden; aptal kişi ise hiç öğrenmez.",author:"Sokrates"},
+  {text:"Yatırımın en önemli kuralı: asla para kaybetme. İkinci kural: birinci kuralı unutma.",author:"Warren Buffett"},
+  {text:"Zorluklar ortasında fırsat yatar.",author:"Albert Einstein"},
+  {text:"Zaman, sahip olduğun her şeydir. Tek sermayendir.",author:"Harvey MacKay"},
+  {text:"Disiplin, istediğin şeyle ihtiyaç duyduğun şey arasındaki köprüdür.",author:"Jim Rohn"},
+  {text:"Başarı bir yolculuktur, varış noktası değil.",author:"Ben Sweetland"},
+  {text:"Piyasada paradan çok sabır gerekir.",author:"Jesse Livermore"},
+];
+
+const BIRTHDAYS_DEFAULT=[
+  {name:'Cansu Palancı',date:'02-26',emoji:'👸',note:'Eşim 💍',cat:'aile'},
+  {name:'Murat Palancı',date:'10-21',emoji:'👨',note:'Babam',cat:'aile'},
+  {name:'Serap Palancı',date:'11-20',emoji:'👩',note:'Annem',cat:'aile'},
+  {name:'Sena Balaban',date:'07-14',emoji:'👧',note:'Kız kardeşim',cat:'aile'},
+  {name:'Morty',date:'09-22',emoji:'🐕',note:'Mini Schnauzer',cat:'morty'},
+  {name:'Evlilik Yıldönümü',date:'12-07',emoji:'💑',note:'Cansu & Mert',cat:'ozel'},
+  {name:'Mustafa Alp',date:'01-15',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Senolsun',date:'01-03',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Gulistan Bingol',date:'02-12',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Berra Ozgul',date:'02-24',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Deniz Shin',date:'03-20',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Ekin Sen',date:'03-25',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Emir Eskinazi',date:'03-28',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Elif Tutarkaban',date:'03-29',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Levent Yilmazoglu',date:'03-30',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Mert Husmenov',date:'03-31',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Sahinder Ozge',date:'04-01',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Elif Ozge',date:'04-25',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Cansu Yegin',date:'05-22',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Naz Demirhisar',date:'05-23',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Shin Alp',date:'06-12',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Aycan Alp',date:'08-15',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Nihat Yuksel',date:'08-31',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Begum Okcu',date:'09-06',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Mert Palanci 🎉',date:'10-03',emoji:'🎉',note:'Senin dogum gunun!',cat:'ozel'},
+  {name:'Tolga Irdem',date:'10-01',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Sofia Demir',date:'10-09',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Gokce Oskay',date:'10-12',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Sinem Alp',date:'10-13',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Aylin Shin',date:'10-18',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Lara Hekimoglu',date:'11-04',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Deniz Sunci',date:'11-28',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Melih Oksuz',date:'12-22',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Berrin Oksuz',date:'12-27',emoji:'🎂',note:'',cat:'arkadas'},
+  {name:'Kadir Caglayan',date:'12-28',emoji:'🎂',note:'',cat:'arkadas'},
+];
+
+
+// TATİLLER
+const HOLIDAYS_2026=[
+  {date:'01-01',name:'Yılbaşı',type:'tr',icon:'🎆'},
+  {date:'03-20',name:'Ramazan Bayramı 1. Gün',type:'dini',icon:'🌙'},
+  {date:'03-21',name:'Ramazan Bayramı 2. Gün',type:'dini',icon:'🌙'},
+  {date:'03-22',name:'Ramazan Bayramı 3. Gün',type:'dini',icon:'🌙'},
+  {date:'04-23',name:'Ulusal Egemenlik ve Çocuk Bayramı',type:'tr',icon:'🇹🇷'},
+  {date:'05-01',name:'Emek ve Dayanışma Günü',type:'tr',icon:'🇹🇷'},
+  {date:'05-19',name:'Gençlik ve Spor Bayramı',type:'tr',icon:'🇹🇷'},
+  {date:'05-27',name:'Kurban Bayramı 1. Gün',type:'dini',icon:'🕌'},
+  {date:'05-28',name:'Kurban Bayramı 2. Gün',type:'dini',icon:'🕌'},
+  {date:'05-29',name:'Kurban Bayramı 3. Gün',type:'dini',icon:'🕌'},
+  {date:'05-30',name:'Kurban Bayramı 4. Gün',type:'dini',icon:'🕌'},
+  {date:'07-15',name:'Demokrasi ve Millî Birlik Günü',type:'tr',icon:'🇹🇷'},
+  {date:'08-30',name:'Zafer Bayramı',type:'tr',icon:'🇹🇷'},
+  {date:'10-29',name:'Cumhuriyet Bayramı',type:'tr',icon:'🇹🇷'},
+  {date:'01-19',name:'MLK Day (NYSE Kapalı)',type:'us',icon:'🇺🇸'},
+  {date:'02-16',name:'Presidents Day (NYSE Kapalı)',type:'us',icon:'🇺🇸'},
+  {date:'04-03',name:'Good Friday (NYSE Kapalı)',type:'us',icon:'🇺🇸'},
+  {date:'05-25',name:'Memorial Day (NYSE Kapalı)',type:'us',icon:'🇺🇸'},
+  {date:'06-19',name:'Juneteenth (NYSE Kapalı)',type:'us',icon:'🇺🇸'},
+  {date:'07-04',name:'Independence Day (NYSE Kapalı)',type:'us',icon:'🇺🇸'},
+  {date:'09-07',name:'Labor Day (NYSE Kapalı)',type:'us',icon:'🇺🇸'},
+  {date:'11-26',name:'Thanksgiving (NYSE Kapalı)',type:'us',icon:'🇺🇸'},
+  {date:'12-25',name:'Christmas (NYSE Kapalı)',type:'us',icon:'🇺🇸'},
+];
+
+const STATE={
+  tab:'bulletin',mode:'chat',chatHistory:[],loading:false,
+  lastBulletin:null,lastBulletinTime:null,
+  whoopTokens:null,whoopData:null,
+  birthdays:BIRTHDAYS_DEFAULT,
+  tasks:[
+    {id:1,text:'RZLV exit stratejisini gözden geçir',done:false,tag:'portföy',col:'var(--red)'},
+    {id:2,text:'Malatya Pazarı — katalog son hali',done:false,tag:'malatya',col:'var(--yellow)'},
+    {id:3,text:'Koolseed — Salı toplantısı gündem hazırla',done:false,tag:'koolseed',col:'var(--green)'},
+    {id:4,text:'Snackkie — ürün geliştirme & TikTok',done:false,tag:'snackkie',col:'var(--accent)'},
+    {id:5,text:'Yoppy — yeni alıcı pipeline takibi',done:false,tag:'yoppy',col:'var(--orange)'},
+    {id:6,text:'Morty — aylık vet kontrolü',done:false,tag:'morty',col:'var(--purple)'},
+  ]
+};
+
+// helpers
+function nowTime(){return new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});}
+function nowDate(){return new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
+function fmt(n){return n.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function toast(msg,col='var(--text)'){const el=document.getElementById('toast');el.textContent=msg;el.style.color=col;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
+function openClaude(hint){if(hint&&navigator.clipboard)navigator.clipboard.writeText(hint).catch(()=>{});window.open(CLAUDE_URL,'_blank');}
+function getEdition(){const h=new Date().getHours();if(h>=5&&h<11)return{label:'☀️ Sabah Bülteni',icon:'☀️',time:'Sabah'};if(h>=11&&h<17)return{label:'🌞 Öğle Bülteni',icon:'🌞',time:'Öğle'};return{label:'🌙 Akşam Bülteni',icon:'🌙',time:'Akşam'};}
+// daysUntil handles all birthday date calculations
+
+function todayQuote(){const idx=new Date().getDate()%QUOTES.length;return QUOTES[idx];}
+
+// clock
+document.getElementById('clockbadge').textContent=nowTime();
+setInterval(()=>{const el=document.getElementById('clockbadge');if(el)el.textContent=nowTime();},30000);
+
+// Claude API
+async function callClaude(messages,system,opts){
+  try{
+    const payload={
+      model:'claude-sonnet-4-6',
+      max_tokens:2000,
+      system:system||'Sen NEXUS, Mert\'in asistanisın. Türkçe, net cevap ver.',
+      messages:Array.isArray(messages)?messages:[{role:'user',content:messages}]
+    };
+    const res=await fetch(API,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+
+      },
+      body:JSON.stringify(payload)
+    });
+    if(!res.ok){const e=await res.text();console.error('API:',res.status,e);return '';}
+    const d=await res.json();
+    if(d.error){console.error('Claude:',d.error);return '';}
+    return d.content?.map(b=>b.text||'').join('')||'';
+  }catch(e){console.error('callClaude:',e);return '';}
+}
+
+// Whoop API
+async function whoopCall(body){
+  const r=await fetch(WHOOP_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return r.json();
+}
+
+// BULLETIN SYSTEM
+const BUL_SYS='Sen NEXUS, Mert\'in gunluk bulten asistanisin. Turkce, kapsamli yaz. Mert: Istanbul swing trader, $43K IBKR portfoyu, Libra burcu. Sirketler: Malatya Pazari (5.kusak %100), Koolseed (co-founder %25), Yoppy (co-founder %50 Bulgaristan), Snackkie (co-founder). Portfoy: RZLV 4650@$4.34 SENS 1750@$7.69 SERV 961@$8.96 SOUN 302@$7.92 COIN 20@$182.82 PLTR 19@$129.04 AVAV 16@$164.08. Quant: VaR $1375, Kelly 0.25x, max DD %22. SADECE JSON dondur: {"turkey":"...","turkey_politics":"...","market_pills":[{"label":"BIST","val":"...","chg":"...","dir":"up"}],"world":"...","us_market":"...","crypto":"...","portfolio_note":"...","business_note":"...","fifa":"...","weather":"...","horoscope":"..."}';
+
+
+function fallback(){return{
+  turkey:"BIST 100 endeksi 27 Haziran 2026 haftanin son islem gununu 14.274 puandan kapatti. USD/TRY 46.62, EUR/TRY 53.07 seviyesinde seyrediyor. Gram altin kusel baskiyla 5.860 TL seviyesine geriledi. TCMB Baskani Karahan Turk lirasi varliklarına talep guclu kalmaya devam ediyor aciklamasini yapti. Carry trade islemleri savas sonrasi ilk kez 50 milyar dolari asti. Brent petrol arz normallesme beklentisiyle 73.9 dolara geriledi. TUiK 2025 yili sanayi urun istatistiklerini acikladi. Beta Enerji halka arzinda buyukluk 2.4 milyar TL olarak belirlendi. Borsa Istanbul da Pardus Portfoy MANAS hisselerinde payini yuzde 5.22 ye yukseltti. SocGen den pozitif TL yorumu geldi. Trump yonetimi Turkiye ye yuzlerce milyon dolarlik ucak motoru satisi karari almak uzere. MEGMT sirketinin 650 ton siparis aldigi aciklandi. Fabrika uretimi gostergelerinde buyume surduruluyor. Kredi karti harcamalari Haziran ayinda yuzde 12 artis gosterdi. Ihracat rakamlarinda ilk yarim yilda guclu performans.",
+  turkey_politics:"Cumhurbaskani Erdogan TIM 33. Genel Kurulu ve Ihracat Sampiyonlari Odul Toreni ne katildi. ABD ile Iran arasinda saglanan mutabakatın uygulama sureci ve uluslararası yansimalari yakindan takip ediliyor. Gazze deki ateskes sureci, Israil in ateskes ihlalleri ve bolgeki insani durum gundemin en kritik basligi olmaya devam ediyor. Ticaret Bakani Omer Bolat Dijital Cagda Rekabet Politikalari toplantisina katildi. TUiK Zaman Kullanim Arastirmasi sonuclarini acikladi. Trump yonetiminin Turkiye ye ucak motoru satisi karari ABD-Turkiye iliskilerinde olumlu bir gelisme olarak degerlendirildi. Asgari ucrete ara zam tartismalari gundemdeki yerini koruyor. Helal belgeli urun ithalatinda yeni duzenleme Resmi Gazete de yayimlandi. Pentagon kritik maden tesislerinin ABD ordusu uslerinde kurulmasina izin verecek bu karar Turkiye nin maden ihracatini dogrudan etkiliyor. TIM ihracat verilerine gore Turkiye nin 2026 yili ihracat hedefi 270 milyar dolar. BDDK bankacilik sektorune iliskin yeni duzenlemeleri kamuoyuyla paylasti. Turkiye-AB katilik muzakerelerinde yeni calisma grubu toplantisi yapildi. TCMB para politikasi kurulu bir sonraki toplantisina hazirlanıyor. Enerji ithalatı faturasinin dusurulmesi icin yerli kaynaklara yatirim hizlandiriliyor. Savunma sanayii ihracati rekor kirmaya devam ediyor. Kultur ve turizm sektorunde yaz sezonu guclu acildi. Belediye yatirim projeleri Istanbul da tam hiz devam ediyor. Kamu bankalari kredi faizlerini gozden geciriyor.",
+  market_pills:[
+    {label:"BIST",val:"14.274",chg:"+0.1%",dir:"up"},
+    {label:"USD/TRY",val:"46.62",chg:"+0.1%",dir:"up"},
+    {label:"EUR/TRY",val:"53.07",chg:"+0.1%",dir:"up"},
+    {label:"Altin/g",val:"5.860TL",chg:"-0.7%",dir:"dn"},
+    {label:"S&P 500",val:"7.398",chg:"+0.8%",dir:"up"},
+    {label:"Nasdaq",val:"7.337",chg:"-0.4%",dir:"dn"}
+  ],
+  world:"Iran dronu ABD kargo gemisinin ust guverte sine isabet etti, ABD diger uc dronu dusurdu ve bolgede gerilim tirmanmaya devam ediyor. Trump yuzde 100 gumruk vergisi aciklamasi piyasalari sarstı. OpenAI halka arzini ertelemeyi planlıyor, yapay zeka sektorunde dalgalanma bekleniyor. Apple hisselerinde sert satis yasandi. KOSPI yuzde 8 dustu ve islemlere 20 dakika ara verildi. Japonya Nikkei 225 yuzde 4.5 geriledi. G. Kore SK Hynix 30 milyar dolarlik ABD yatirimi acikladi. Venezuela da 7.0 buyuklugunde deprem 32 olu 700 den fazla yarali cikti. Rusya-Ukrayna cephesinde yogun hava saldirilari raporlandi. Orta Dogu da ABD-Iran baris gorusmeleri kritik asama da oldugu aciklandi. Brent petrol varil basi 73.9 dolara geriledi. AB Merkez Bankasi faiz karari beklentileri piyasalari etkiliyor. Cin de Sangay Bilesik endeksi yuzde 2.1 dustu. NATO uyeleri savunma harcamalarini artirmak icin baski altinda. Global tedarik zincirinde normallesme sureci devam ediyor. Hindistan borsalari yabanci sermaye girisine sahneyken Latin Amerika da siyasi gelismeler piyasalari etkiliyor. Avrupa da dogalgaz depolama yuzde 85 i gecti. IMF 2026 kuresel buyume tahminini yukari yonde revize etti. G20 zirvesi Eylul e hazirlanıyor. Kuresel enflasyonun dorugu geride kaldi mi tartismalari surduruyor.",
+  us_market:"S&P 500 endeksi dunku kapanis ta 7.398 seviyesinde yuzde 0.84 yukselis kaydetti. Nasdaq 7.337 ile yuzde 0.38 geriledi. Dow Jones 52.226 ile yuzde 0.91 artis gosterdi. ABD de mayis ayi PCE fiyat endeksi yillik yuzde 4.1 aciklandi. Fed Temmuz faiz artisi beklentileri onemli olcude zayifladi. Micron Technology beklentileri asan uc uncu ceyrek sonuclarini acikladi, hisse after-hours sert yukseldi. FedEx gelir aciklamasinda hayal kirikligi yaratti, yuzde 6 geriledi. Cerebras ilk kazanc raporunda beklentilerin altinda kaldi yuzde 11 dustu. KB Home yuzde 3 yukseldi. JPMorgan perakende yatirimcilarin kaldirac kullaniminin asiri seviyelerden geri cekildigini acikladi. 2 yillik tahvil faizi yuzde 4.10, 10 yillik yuzde 4.37, 30 yillik yuzde 4.85 e dustu. Dolar endeksi 101.43 seviyesinde. ABD ekonomisi 2026 ilk ceyrekte yuzde 2.1 buyudu. Ilk issizlik basvurulari 215 bin ile guclu is piyasasina isaret ediyor. Yapay zeka baglanli hisse senetleri genel piyasanin gerisinde kaliyor. Nvidia yuzde 3.2 geriledi. Google ve IBM baskanlari Trump ile Oval Office de yapay zeka yatirimlari icin bir araya geldi. Qualcomm guclu sonuclarla piyasayi olumlu etkiledi. Fed Baskani Powell in aciklamalari yakindan takip ediliyor. ABD konut piyasasinda yavaslama belirginlesiyor. Tuketici guveni endeksi beklentilerin altinda kaldi.",
+  crypto:"Bitcoin yuzde 0.9 artisla 59.930 dolardan islem gordu. Ethereum 3.420 dolar seviyesinde yatay seyrediyor. Gumusun onsu yuzde 2.30 dususle 56.5 dolardan islem gordu. Fed faiz politikasi belirsizligi kripto piyasasini temkinli tutuyor. BTC dominansi yuzde 54 e yaklasti. Spot Bitcoin ETF lerine haftalik net giris 380 milyon dolar oldu.",
+  portfolio_note:"PCE yuzde 4.1 beklentilerin uzerinde geldi ancak Fed Temmuz faiz artisi ihtimali azaldi. Micron rallisi cip sektorunu canlandiriyor, SERV ve SOUN icin pozitif. RZLV ve SENS hala kritik drawdown bolgesinde, Two Sigma Kelly 0.25x limitinde tut. PLTR ve COIN son haftada gorecel guc gosterdi. Petrol dususu enflasyon baskisini azaltiyor. Bridgewater cercevesinde mevcut rejim buyume yavasliyor enflasyon yuksek, savunmaci pozisyonlama onerisi. LAES momentum kazaniyor. VaR limitini kontrol et, portfoy konsantrasyonu yuksek.",
+  business_note:"TIM Ihracat Sampeiyonlari toreni bugun yapildi. Plant-based protein pazari Avrupa da 2026 da yuzde 18 buyume bekleniyor. Bulgaristan perakende sektoru yuzde 7 buyume gosteriyor. Koolseed Sali toplantisina hazirlik gundemin basinda. Kuruyemis sektorunde ihracat firsatlari genislıyor. Snackkie icin hurma bazli urun trendi Orta Dogu ve Korfez pazarinda ivme kazaniyor. Malatya Pazari online satis kanallari buyumeye devam ediyor. E-ticaret lojistik maliyetleri dusu egilimine girdi. Gida ihracatinda yeni pazar acilimlari icin devlet destekleri genislıyor. Saglikli yasam trendi tum segmentlerde talep artisi yaratiyor. Ambalaj ve surdurulebilirlik yatirimlari sektorun onceligi haline geliyor. Dijital pazarlama maliyetleri normalize olmaya basladi. B2B satis kanallarinda yeni ortaklik firsatlari degerlendirilıyor. TikTok ve Instagram da gida icerik pazarlamasi hizla buyuyor. Uluslararasi gida fuarlarinda Turk markalari one cikiyor.",
+  fifa:"Turkiye A Milli Futbol Takimi, Dunya Kupasi nin son grup macinda ABD yi 3-2 yenerek turnuvadan 3 puanla ayrildi. Gruptan cikamasa da final macindaki performans buyuk takdir topladi ve taraftarlarin gururunu pekistirdi. ABD bugun Almanya ile kapisiyor. Arjantin ve Fransa ceyrek finale yukseldi. Brezilya beklenmedik bir gruptan cikis yasadi.",
+  weather:"Istanbul bugun gunes li ve cok sicak bir gun geciriyor. Sabah saatlerinde 28 derece ile baslayen sicaklik ogleden sonra 32 dereceye ulasti. Nem orani yuzde 68 ile oldukca yuksek, hissedilen sicaklik 36-37 dereceye kadar cikiyor. Gunes batimi 20.47 de gerceklesecek. Ruzgar kuzey yonlu saatte 12-15 km hizinda hafif esintiler var. Hafta sonu Cumartesi 30 derece Pazar 28 dereceye dusus bekleniyor. Gelecek hafta basinda hafif yagis ihtimali mevcut, Pazartesi icin yuzde 30 yagis olasiligi var. UV endeksi bugun 9 ile cok yuksek kategorisinde, gunes kremi zorunlu. Bogaz da akintu guclu yuzme tutkunlari dikkat. Istanbul da hava kalitesi orta seviyede. Saat 14.00-17.00 arasi en sicak dilim, bu saatlerde dis cikmayi en aza indirin. Aksam saatlerinde serinleme bekleniyor, 22 dereceye kadar dusus olabilir. Marmara genelinde benzer tablo hakim, Kocaeli nde saganak yagis bekleniyor.",
+  horoscope:"Terazi burcu olarak bu hafta sonu sana sunulan enerji son derece guclu ve cok yonlu. Venus un Mali ev uzerindeki etkisi finansal kararlarinda netlik ve dogal bir sezgi getiriyor. Piyasalari takip et, firsatlari degerlendirmeye hazir ol ama impulsif adimlardan kacin. Merkur retrosu hicbir zaman hala bitmedigi icin sozlesme ve buyuk yatirim kararlarinda bir hafta daha sabir tavsiye edilir. Is hayatinda Koolseed Malatya Pazari ve Snackkie projelerinde yeni bir enerji hissedeceksin, ozellikle pazarlama ve iletisim konularinda yaratici fikirler zihninde beliriyor. Bu hafta is ortakliklari konusunda onemli bir gorusme yapabilirsin, dikkatli ve hazirlikli gir. Partnerinle guzel bir bag kurma zamani, aksam saatlerinde kaliteli zaman gecirmen iliskini derinlestirecek. Morty ile sabah yuruyusu hem seni hem onu rahatlatacak, bu aliskanligi ihmal etme. Hafta sonu enerjini tamamen yenilemek icin dogayla bulusmayı dusun. Saglik acisindan bol su icmeyi, ozellikle bu sicakta gunde en az 3 litre sivi almayı unutma. Finansal olarak bu hafta temkinli ama gozu acik bir tutum en dogrusu, portfoyunde kisa vadeli dalgalanmalar seni sasirtmasin uzun vadeli vizyonuna guven."
+};}
+
+async function fetchBulletin(force){
+  // Cache kontrolü
+  if(!force&&STATE.lastBulletin&&STATE.lastBulletinTime&&(Date.now()-STATE.lastBulletinTime)/60000<60){
+    renderBulletin(STATE.lastBulletin);return;
+  }
+  // Fallback veriyi hemen göster
+  const fb=fallback();
+  STATE.lastBulletin=fb;
+  STATE.lastBulletinTime=Date.now();
+  renderBulletin(fb);
+}
+
+
+function renderLoading(){
+  document.getElementById('statuslbl').textContent='Çekiyor…';
+  const steps=[{l:'Piyasa verileri…',id:'s1'},{l:'Haberler…',id:'s2'},{l:'Portföy analizi…',id:'s3'},{l:'Hazırlanıyor…',id:'s4'}];
+  document.getElementById('view').innerHTML=`<div class="bul-loading">
+    <div class="bul-loading-icon">◈</div>
+    <div style="font-size:14px;font-weight:600;color:var(--text)">Bülten hazırlanıyor</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${steps.map(s=>`<div class="bul-step" id="${s.id}"><div class="bul-step-dot"></div>${s.l}</div>`).join('')}
+    </div>
+  </div>`;
+  steps.forEach((s,i)=>setTimeout(()=>{document.getElementById(s.id)?.classList.add('active');if(i>0)document.getElementById(steps[i-1].id)?.classList.replace('active','done');},i*600));
+}
+
+function formatBulletin(text){
+  if(!text||text==='—')return '<p style="color:var(--sub)">—</p>';
+  const sentences=text.split(/\.\s+/).filter(s=>s.trim().length>15);
+  if(sentences.length<=1)return '<p style="font-size:13px;line-height:1.6">'+text+'</p>';
+  return sentences.map(s=>
+    '<div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid rgba(26,38,56,.2);align-items:flex-start">'
+    +'<span style="color:var(--accent);flex-shrink:0;margin-top:4px;font-size:10px;font-weight:700">▸</span>'
+    +'<span style="font-size:12px;line-height:1.55;color:var(--text)">'+s.trim()+(s.trim().endsWith('.')?'':'.')+'</span>'
+    +'</div>'
+  ).join('');
+}
+
+function renderBulletin(d){
+  document.getElementById('statuslbl').textContent='Hazır';
+  const ed=getEdition();
+  const q=todayQuote();
+  const pills=(d.market_pills||[]).map(p=>`<div class="mpill">
+    <div class="mpill-label">${p.label}</div>
+    <div class="mpill-val ${p.dir==='up'?'up':p.dir==='dn'?'dn':'fl'}">${p.val}</div>
+    <div class="mpill-chg ${p.dir==='up'?'up':p.dir==='dn'?'dn':'fl'}">${p.chg}</div>
+  </div>`).join('');
+  const pfRows=PORTFOLIO.slice(0,6).map(p=>`<div class="pf-mini-row">
+    <div class="pf-mini-tick" style="color:${p.warn?'var(--red)':'var(--text)'}">${p.t}</div>
+    <div class="pf-mini-qty">${p.q}×$${p.c.toFixed(2)}</div>
+    <div class="pf-mini-total" style="color:${p.warn?'var(--red)':'var(--text)'}">$${fmt(p.q*p.c)}</div>
+  </div>`).join('');
+
+  // Yaklaşan doğum günleri
+  const upBdays=BIRTHDAYS_DEFAULT
+    .map(b=>({...b,days:daysUntil(b.date)}))
+    .filter(b=>b.days<=14)
+    .sort((a,b2)=>a.days-b2.days)
+    .slice(0,3);
+  const bdayHTML=upBdays.length?`<div class="card">
+    <div class="card-hdr"><span class="card-icon">🎂</span><span class="card-title">Yaklaşan Doğum Günleri</span></div>
+    <div class="card-body">${upBdays.map(b=>`<p>${b.emoji||'🎂'} <strong>${b.name}</strong> — ${b.days===0?'Bugün! 🎉':b.days+' gün kaldı'}</p>`).join('')}</div>
+  </div>`:'';
+
+  document.getElementById('view').innerHTML=`<div class="bul-wrap">
+    <div class="bul-header">
+      <div>
+        <div class="bul-edition">${ed.label}</div>
+        <div class="bul-title">Daily Newsletter</div>
+        <div class="bul-date">${nowDate()} · ${nowTime()}</div>
+      </div>
+      <div style="font-size:28px">${ed.icon}</div>
+    </div>
+
+    <div class="quote-card">
+      <div class="quote-text">"${q.text}"</div>
+      <div class="quote-author">— ${q.author}</div>
+    </div>
+
+    <div class="refresh-row">
+      <button class="rbtn primary" onclick="fetchBulletin(true)">⟳ Yenile</button>
+      <a class="rbtn" href="${CLAUDE_URL}" target="_blank" style="text-decoration:none;color:var(--sub)">◈ Derin Analiz</a>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-icon">🇹🇷</span><span class="card-title">Türkiye Piyasaları & Ekonomi</span></div>
+      <div class="market-row">${pills}</div>
+      <div class="card-body" style="padding-top:6px">${formatBulletin(d.turkey)}</div>
+    </div>
+
+    ${d.turkey_politics?`<div class="card">
+      <div class="card-hdr"><span class="card-icon">🏛</span><span class="card-title">Türkiye Siyasi Gündem</span></div>
+      <div class="card-body" style="padding-top:6px">${formatBulletin(d.turkey_politics)}</div>
+    </div>`:''}
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-icon">🌍</span><span class="card-title">Dünya Gündemi & Jeopolitik</span></div>
+      <div class="card-body" style="padding-top:6px">${formatBulletin(d.world)}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-icon">🇺🇸</span><span class="card-title">ABD Piyasaları & Ekonomi</span></div>
+      <div class="card-body" style="padding-top:6px">${formatBulletin(d.us_market)}</div>
+    </div>
+
+    ${d.crypto?`<div class="card">
+      <div class="card-hdr"><span class="card-icon">₿</span><span class="card-title">Kripto Piyasası</span></div>
+      <div class="card-body" style="padding-top:6px">${formatBulletin(d.crypto)}</div>
+    </div>`:''}
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-icon">📊</span><span class="card-title">Portföy Analizi & Aksiyon</span></div>
+      <div class="card-body" style="padding-top:6px">${formatBulletin(d.portfolio_note)}</div>
+      <div>${pfRows}</div>
+      <div style="padding:6px 14px;font-size:10px;color:var(--sub);font-family:var(--mono)">+${PORTFOLIO.length-6} pozisyon · Portföy sekmesinde</div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-icon">🏢</span><span class="card-title">İş Gündemi</span></div>
+      <div class="card-body" style="padding-top:6px">${formatBulletin(d.business_note)}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span class="card-icon">⚽</span><span class="card-title">FIFA 2026</span></div>
+      <div class="card-body"><p>${d.fifa||'—'}</p></div>
+    </div>
+
+    ${bdayHTML}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="card">
+        <div class="card-hdr"><span class="card-icon">☀️</span><span class="card-title">İstanbul</span></div>
+        <div class="card-body" style="padding-top:6px">${formatBulletin(d.weather)}</div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-icon">♎</span><span class="card-title">Libra</span></div>
+        <div class="card-body" style="padding-top:6px">${formatBulletin(d.horoscope)}</div>
+      </div>
+    </div>
+
+    <div class="cb-wrap">
+      <div class="cb-title">⚡ Hızlı Aksiyonlar</div>
+      <div class="cb-btns">
+        <button class="cb-btn cal" onclick="openClaude('Takvime ekle: ')">📅 Takvim</button>
+        <button class="cb-btn rem" onclick="openClaude('Hatırlatıcı kur: ')">🔔 Reminder</button>
+        <button class="cb-btn mail" onclick="openClaude('Mail yaz: ')">✉ Mail</button>
+        <button class="cb-btn pf" onclick="openClaude('Portföy analizi yap, RZLV ve SENS değerlendir.')">📊 Analiz</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// WHOOP
+function renderWhoop(){
+  document.getElementById('inputbar').style.display='none';
+  if(STATE.whoopData){renderWhoopData(STATE.whoopData);return;}
+  // check localStorage for tokens
+  const stored=localStorage.getItem('whoop_tokens');
+  if(stored){
+    STATE.whoopTokens=JSON.parse(stored);
+    loadWhoopData();return;
+  }
+  document.getElementById('view').innerHTML=`<div class="pad">
+    <div class="sec-hdr">Whoop Sağlık</div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-icon">💚</span><span class="card-title">Whoop Bağlantısı</span></div>
+      <div class="whoop-connect">
+        <p>Whoop verilerine bağlanmak için hesabınla giriş yap.</p>
+        <button class="connect-btn" onclick="connectWhoop()">💚 Whoop'a Bağlan</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function connectWhoop(){
+  const scope='offline read:recovery read:sleep read:workout read:cycles read:body_measurement read:profile';
+  const url=`https://api.prod.whoop.com/oauth/oauth2/auth?client_id=${CLIENT_ID}&redirect_uri=https://localhost/&response_type=code&scope=${encodeURIComponent(scope)}&state=nexus12345`;
+  window.open(url,'_blank');
+  setTimeout(()=>{
+    const code=prompt('Yönlendirilen URL\'den code= parametresini yapıştır:');
+    if(code)exchangeWhoopCode(code.trim());
+  },2000);
+}
+
+async function exchangeWhoopCode(code){
+  toast('Token alınıyor…','var(--cyan)');
+  try{
+    const d=await whoopCall({action:'exchange',code});
+    if(d.access_token){
+      STATE.whoopTokens=d;
+      localStorage.setItem('whoop_tokens',JSON.stringify(d));
+      loadWhoopData();
+    }else{toast('Bağlantı hatası','var(--red)');}
+  }catch{toast('Whoop API hatası','var(--red)');}
+}
+
+async function loadWhoopData(){
+  document.getElementById('view').innerHTML=`<div class="pad"><div class="sec-hdr">Whoop</div><div style="text-align:center;padding:40px;color:var(--sub)"><div style="font-size:30px;animation:rot 2s linear infinite">💚</div><p style="margin-top:12px;font-family:var(--mono);font-size:11px">Veri yükleniyor…</p></div></div>`;
+  try{
+    let tokens=STATE.whoopTokens;
+    const d=await whoopCall({action:'data',access_token:tokens.access_token});
+    if(d.error&&d.error.includes('401')){
+      // refresh
+      const refreshed=await whoopCall({action:'refresh',refresh_token:tokens.refresh_token});
+      if(refreshed.access_token){
+        STATE.whoopTokens=refreshed;
+        localStorage.setItem('whoop_tokens',JSON.stringify(refreshed));
+        const d2=await whoopCall({action:'data',access_token:refreshed.access_token});
+        STATE.whoopData=d2;renderWhoopData(d2);
+      }
+    }else{STATE.whoopData=d;renderWhoopData(d);}
+  }catch{toast('Whoop veri hatası','var(--red)');}
+}
+
+function renderWhoopData(d){
+  const rec=d.recovery?.records?.[0]?.score||{};
+  const sleep=d.sleep?.records?.[0]?.score||{};
+  const cycle=d.cycles?.records?.[0]||{};
+  const recScore=rec.recovery_score||'—';
+  const sleepScore=sleep.sleep_performance_percentage||'—';
+  const strain=cycle.score?.strain||'—';
+  const hrv=rec.hrv_rmssd_milli?Math.round(rec.hrv_rmssd_milli)+'ms':'—';
+  const rhr=rec.resting_heart_rate?Math.round(rec.resting_heart_rate)+' bpm':'—';
+  const sleepHrs=sleep.total_in_bed_time_milli?(sleep.total_in_bed_time_milli/3600000).toFixed(1)+'s':'—';
+
+  const recColor=typeof recScore==='number'?(recScore>=67?'var(--green)':recScore>=34?'var(--yellow)':'var(--red)'):'var(--sub)';
+  const sleepColor=typeof sleepScore==='number'?(sleepScore>=85?'var(--green)':sleepScore>=70?'var(--yellow)':'var(--red)'):'var(--sub)';
+
+  document.getElementById('view').innerHTML=`<div class="pad">
+    <div class="sec-hdr">Whoop · Günlük Sağlık</div>
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr"><span class="card-icon">💚</span><span class="card-title">Genel Durum</span></div>
+      <div class="whoop-grid">
+        <div class="wcard">
+          <div class="wcard-icon">🔋</div>
+          <div class="wcard-val" style="color:${recColor}">${typeof recScore==='number'?recScore+'%':recScore}</div>
+          <div class="wcard-lbl">Recovery</div>
+        </div>
+        <div class="wcard">
+          <div class="wcard-icon">😴</div>
+          <div class="wcard-val" style="color:${sleepColor}">${typeof sleepScore==='number'?sleepScore+'%':sleepScore}</div>
+          <div class="wcard-lbl">Uyku</div>
+        </div>
+        <div class="wcard">
+          <div class="wcard-icon">⚡</div>
+          <div class="wcard-val" style="color:var(--orange)">${typeof strain==='number'?strain.toFixed(1):strain}</div>
+          <div class="wcard-lbl">Strain</div>
+        </div>
+        <div class="wcard">
+          <div class="wcard-icon">💓</div>
+          <div class="wcard-val" style="color:var(--red)">${rhr}</div>
+          <div class="wcard-lbl">RHR</div>
+        </div>
+        <div class="wcard">
+          <div class="wcard-icon">📊</div>
+          <div class="wcard-val" style="color:var(--cyan)">${hrv}</div>
+          <div class="wcard-lbl">HRV</div>
+        </div>
+        <div class="wcard">
+          <div class="wcard-icon">🛏</div>
+          <div class="wcard-val" style="color:var(--accent)">${sleepHrs}</div>
+          <div class="wcard-lbl">Uyku Süresi</div>
+        </div>
+      </div>
+    </div>
+    <button class="rbtn primary" onclick="loadWhoopData()" style="width:100%;margin-bottom:10px">⟳ Yenile</button>
+    <button class="rbtn" onclick="localStorage.removeItem('whoop_tokens');STATE.whoopTokens=null;STATE.whoopData=null;renderWhoop();" style="width:100%;color:var(--red)">Bağlantıyı Kes</button>
+    <div style="height:20px"></div>
+  </div>`;
+}
+
+// MORTY
+function renderMorty(){
+  document.getElementById('inputbar').style.display='none';
+  const birthDate=new Date('2018-09-22');
+  const today=new Date();
+  const ageYears=today.getFullYear()-birthDate.getFullYear();
+  const nextBday=new Date(today.getFullYear(),8,22); // Sep 22
+  if(nextBday<today)nextBday.setFullYear(today.getFullYear()+1);
+  const daysToNext=Math.ceil((nextBday-today)/(1000*60*60*24));
+
+  const vetItems=[
+    {icon:'💊',text:'Aylık anti-parazit (iç)',freq:'Her ay'},
+    {icon:'🛡',text:'Dış parazit — pire & kene',freq:'Her ay'},
+    {icon:'🦷',text:'Diş temizliği kontrolü',freq:'Her 3 ay'},
+    {icon:'💉',text:'Yıllık aşılar (karma + kuduz)',freq:'Yıllık · Eylül'},
+    {icon:'🩺',text:'Genel sağlık muayenesi',freq:'6 ayda bir'},
+    {icon:'🥗',text:'Alerjik beslenme takibi',freq:'Sürekli'},
+  ];
+
+  document.getElementById('view').innerHTML=`<div class="pad">
+    <div class="sec-hdr">Morty 🐾</div>
+    <div class="card">
+      <div class="morty-header">
+        <div class="morty-avatar" style="background:none;overflow:hidden"><img src="data:image/jpeg;base64,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" style="width:52px;height:52px;object-fit:cover;border-radius:50%"/></div>
+        <div>
+          <div class="morty-name">Morty</div>
+          <div class="morty-breed">Mini Schnauzer · Erkek</div>
+          <div class="morty-age">${ageYears} yaşında · 22 Eylül 2018</div>
+          <div style="font-size:11px;color:var(--yellow);font-family:var(--mono);margin-top:2px">🎂 ${daysToNext===0?'Bugün doğum günü! 🎉':daysToNext+' gün sonra doğum günü'}</div>
+        </div>
+      </div>
+      <div style="padding:0 14px 10px">
+        <div style="background:rgba(255,179,0,.08);border:1px solid rgba(255,179,0,.2);border-radius:9px;padding:9px 12px;font-size:12px;color:var(--yellow)">
+          ⚠️ <strong>Alerjik beslenme</strong> — tahılsız, hipoalerjenik mama. Protein kaynağı: kuzu veya balık bazlı.
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-hdr" style="margin-top:4px">Veteriner Takvimi</div>
+    <div class="vet-list">
+      ${vetItems.map(v=>`<div class="vet-item">
+        <div class="vet-icon">${v.icon}</div>
+        <div style="flex:1"><div class="task-txt">${v.text}</div><div class="vet-freq">${v.freq}</div></div>
+      </div>`).join('')}
+    </div>
+
+    <div class="sec-hdr" style="margin-top:4px">Mini Schnauzer Bilgisi</div>
+    <div class="card">
+      <div class="card-body" style="font-size:12px">
+        <p>🧠 <strong>Zeka:</strong> Dünyada en zeki 12. köpek ırkı. Görev odaklı, öğrenmesi hızlı.</p>
+        <p>❤️ <strong>Karakter:</strong> Çok sadık, enerjik, sevgi dolu. Sahiplerine son derece bağlı.</p>
+        <p>🌾 <strong>Alerji:</strong> Schnauzer'lar tahıl ve kümes hayvanlarına alerjik olabilir. Hipoalerjenik mama önerilir.</p>
+        <p>✂️ <strong>Tıraş:</strong> 6-8 haftada bir traşlanmalı. Tüyleri dökülmez, hipoalerjenik ırk.</p>
+        <p>🏃 <strong>Egzersiz:</strong> Günde 2x yürüyüş gerekir. Yüksek enerji seviyesi.</p>
+        <p>📅 <strong>Ortalama yaşam:</strong> 12-15 yıl.</p>
+      </div>
+    </div>
+    <div style="height:20px"></div>
+  </div>`;
+}
+
+
+
+// CHAT
+const CHAT_SYS=`Sen NEXUS — Mert'in kişisel AI asistanısın. Türkçe, net, kısa cevap ver.
+Mert: İstanbul, swing trader, Libra. Köpek: Morty (Mini Schnauzer, alerjik).
+Şirketler: Malatya Pazarı (5.kuşak %100), Koolseed (co-founder %25 2M TL, Salı 12:00), Yoppy (co-founder %50 50K EUR Bulgaristan), Snackkie (co-founder 1M TL).
+Portföy $43K: RZLV 4650@$4.34⚠ SENS 1750@$7.69⚠ SERV 961@$8.96⚠ SOUN 302@$7.92 SPCX 12@$200.31 COIN 15@$194.77 PLTR 14@$136.19 AVAV 16@$164.08 AVGO 3@$383.33 TMO 5@$442.26 LAES 501@$2.84 AMPG 1@$2.20
+Quant: RSI>70 aşırı alım, RSI<30 aşırı satım. Golden Cross (50MA>200MA) boğa. Two Sigma VaR $1375/gün, Kelly 0.25x, max DD %22. Bridgewater 4 rejim. RZLV+SENS+SERV concentrated risk.`;
+
+
+async function sendMsg(){
+  const inp=document.getElementById('msginput');
+  const text=inp.value.trim();if(!text||STATE.loading)return;
+  inp.value='';inp.style.height='';STATE.loading=true;
+  STATE.chatHistory.push({role:'user',content:text,time:nowTime()});
+  renderChat();
+  try{
+    const reply=await callClaude(STATE.chatHistory.map(m=>({role:m.role,content:m.content})),CHAT_SYS);
+    STATE.chatHistory.push({role:'assistant',content:reply,time:nowTime()});
+  }catch{STATE.chatHistory.push({role:'assistant',content:'Bağlantı hatası.',time:nowTime()});}
+  STATE.loading=false;renderChat();
+}
+
+function renderChat(){
+  const ib=document.getElementById('inputbar');
+  ib.style.display='flex';
+  ib.style.flexDirection='column';
+  renderModeChips();
+  const view=document.getElementById('view');
+  if(!STATE.chatHistory.length){
+    view.innerHTML=`<div style="text-align:center;margin-top:40px;color:var(--sub);padding:0 20px">
+      <div style="font-size:32px;margin-bottom:10px">◈</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">Sohbet</div>
+      ${['📊 Portföy analizimi yap','💚 Whoop verilerime göre bugün antrenman yapmalı mıyım?','✉ RZLV için mail taslağı','🐾 Morty için alerjik mama önerileri','🌍 Bugün piyasalarda ne var?']
+        .map(e=>`<div onclick="fillInput('${e.replace(/'/g,"\\'")}');document.getElementById('msginput').focus();" style="padding:8px 12px;margin-bottom:6px;background:var(--panel);border:1px solid var(--border);border-radius:9px;font-size:12px;cursor:pointer;color:var(--text);text-align:left">${e}</div>`).join('')}
+    </div>`;return;
+  }
+  view.innerHTML='<div class="chat-wrap" id="chatlist"></div>';
+  const list=document.getElementById('chatlist');
+  STATE.chatHistory.forEach(m=>{
+    const div=document.createElement('div');div.className='msg '+(m.role==='user'?'user':'ai');
+    const lines=(m.content||'').split('\n').map(l=>`<p>${l.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')||'&nbsp;'}</p>`).join('');
+    div.innerHTML=`<div class="avatar">${m.role==='user'?'M':'N'}</div><div class="mbody"><div class="mmeta">${m.role==='user'?'Mert':'NEXUS'} · ${m.time||''}</div><div class="bubble">${lines}</div></div>`;
+    list.appendChild(div);
+  });
+  if(STATE.loading){const t=document.createElement('div');t.className='msg ai';t.innerHTML=`<div class="avatar">N</div><div class="mbody"><div class="mmeta">NEXUS</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>`;list.appendChild(t);}
+  requestAnimationFrame(()=>view.scrollTop=view.scrollHeight);
+}
+
+function renderModeChips(){
+  document.getElementById('modechips').innerHTML=MODES.map(m=>`<button class="mchip ${STATE.mode===m.id?'on':''}" style="${STATE.mode===m.id?`background:${m.col};border-color:${m.col};`:''}" onclick="STATE.mode='${m.id}';renderModeChips()">${m.icon} ${m.label}</button>`).join('');
+}
+function fillInput(t){document.getElementById('msginput').value=t;document.getElementById('sendbtn').disabled=false;}
+
+// PORTFOLIO
+async function renderPortfolio(){
+  document.getElementById('inputbar').style.display='none';
+  const totalCost=PORTFOLIO.reduce((s,p)=>s+p.q*p.c,0);
+
+  // İlk render — maliyet bazı göster, fiyatlar yüklensin
+  document.getElementById('view').innerHTML=`<div class="pad">
+    <div class="sec-hdr">İş Portföyü</div>
+    <div class="pf-list" style="margin-bottom:16px">${COMPANIES.map(c=>`<div class="pf-row" style="border-color:${c.col}33">
+      <div style="font-size:20px;width:28px;text-align:center">${c.icon}</div>
+      <div class="pf-info">
+        <div style="font-size:12px;font-weight:600">${c.name}</div>
+        <div style="font-size:10px;color:${c.col};font-family:var(--mono)">${c.role}</div>
+        <div style="font-size:11px;color:var(--sub)">${c.desc}</div>
+        ${c.meeting?`<div style="font-size:10px;color:var(--yellow)">🔔 ${c.meeting}</div>`:''}
+      </div>
+    </div>`).join('')}</div>
+
+    <div class="sec-hdr">IBKR Borsa <span id="price-status" style="font-size:9px;color:var(--sub);font-weight:400;text-transform:none;letter-spacing:0">· fiyatlar yükleniyor…</span></div>
+    <div class="pf-stats" id="pf-stats-row">
+      <div class="stat-card"><div class="stat-lbl">Maliyet Bazı</div><div class="stat-val" style="font-size:14px">$${fmt(totalCost)}</div></div>
+      <div class="stat-card"><div class="stat-lbl">Güncel Değer</div><div class="stat-val" style="font-size:14px;color:var(--sub)" id="pf-value">—</div></div>
+      <div class="stat-card"><div class="stat-lbl">Toplam P&L</div><div class="stat-val" style="font-size:14px" id="pf-pnl">—</div></div>
+      <div class="stat-card"><div class="stat-lbl">P&L %</div><div class="stat-val" style="font-size:14px" id="pf-pnlpct">—</div></div>
+    </div>
+    <div class="pf-list" id="pf-rows">${PORTFOLIO.map(p=>`<div class="pf-row" id="pfr-${p.t}">
+      <div class="pf-tick" style="color:${p.warn?'var(--red)':'var(--text)'}">${p.t}${p.warn?'<br><span class="warn-badge">⚠</span>':''}</div>
+      <div class="pf-info">
+        <div class="pf-qty">${p.q} adet · @$${p.c.toFixed(2)}</div>
+        <div class="pf-cv" id="pfc-${p.t}" style="color:var(--sub)">Fiyat yükleniyor…</div>
+      </div>
+      <div style="text-align:right">
+        <div class="pf-tot" id="pft-${p.t}" style="color:${p.warn?'var(--red)':'var(--text)'}">$${fmt(p.q*p.c)}</div>
+        <div style="font-size:10px;font-family:var(--mono)" id="pfp-${p.t}"></div>
+      </div>
+    </div>`).join('')}</div>
+    <button onclick="renderPortfolio()" style="width:100%;margin-top:10px;padding:10px;border-radius:10px;background:var(--panel);border:1px solid var(--border);color:var(--sub);font-size:12px;font-family:var(--font);cursor:pointer">⟳ Fiyatları Yenile</button>
+    <div style="font-size:10px;color:var(--sub);font-family:var(--mono);text-align:center;margin-top:8px">Yahoo Finance · 15 dk gecikmeli</div>
+
+    <div class="sec-hdr" style="margin-top:16px">İzleme Listesi <span id="wl-status" style="font-size:9px;color:var(--sub);font-weight:400;text-transform:none;letter-spacing:0">· yükleniyor…</span></div>
+    <div class="pf-list" id="wl-rows">${WATCHLIST.map(t=>`<div class="pf-row" id="wlr-${t}">
+      <div class="pf-tick" style="color:var(--text)">${t}</div>
+      <div class="pf-info"><div class="pf-cv" id="wlc-${t}" style="color:var(--sub)">—</div></div>
+      <div style="text-align:right">
+        <div class="pf-tot" id="wlp-${t}">—</div>
+        <div style="font-size:10px;font-family:var(--mono)" id="wlch-${t}"></div>
+      </div>
+    </div>`).join('')}</div>
+    <div style="height:20px"></div>
+  </div>`;
+
+  // Fiyatları çek
+  try{
+    const symbols=PORTFOLIO.map(p=>p.t);
+    const res=await fetch('/api/prices',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({symbols})
+    });
+    const prices=await res.json();
+
+    let totalVal=0,totalPnl=0;
+    PORTFOLIO.forEach(p=>{
+      const pr=prices[p.t];
+      if(!pr)return;
+      const val=p.q*pr.price;
+      const cost=p.q*p.c;
+      const pnl=val-cost;
+      const pnlPct=(pnl/cost)*100;
+      totalVal+=val;totalPnl+=pnl;
+
+      const pnlCol=pnl>=0?'var(--green)':'var(--red)';
+      const chgCol=pr.changePct>=0?'var(--green)':'var(--red)';
+      const sign=pnl>=0?'+':'';
+      const csign=pr.changePct>=0?'+':'';
+
+      const tickEl=document.getElementById('pfr-'+p.t);
+      if(tickEl)tickEl.querySelector('.pf-tick').style.color=p.warn?'var(--red)':(pnl>=0?'var(--green)':'var(--red)');
+
+      const cEl=document.getElementById('pfc-'+p.t);
+      if(cEl)cEl.innerHTML=`<span style="color:var(--text);font-weight:600">$${pr.price.toFixed(2)}</span> <span style="color:${chgCol}">${csign}${pr.changePct.toFixed(2)}%</span>`;
+
+      const tEl=document.getElementById('pft-'+p.t);
+      if(tEl){tEl.textContent='$'+fmt(val);tEl.style.color=pnl>=0?'var(--green)':'var(--red)';}
+
+      const pEl=document.getElementById('pfp-'+p.t);
+      if(pEl){pEl.textContent=sign+'$'+fmt(pnl)+' ('+sign+pnlPct.toFixed(1)+'%)';pEl.style.color=pnlCol;}
+    });
+
+    // Özet satırları güncelle
+    const totalPnlPct=(totalPnl/totalCost)*100;
+    const pnlCol=totalPnl>=0?'var(--green)':'var(--red)';
+    const sign=totalPnl>=0?'+':'';
+    document.getElementById('pf-value').textContent='$'+fmt(totalVal);
+    document.getElementById('pf-value').style.color='var(--cyan)';
+    document.getElementById('pf-pnl').textContent=sign+'$'+fmt(totalPnl);
+    document.getElementById('pf-pnl').style.color=pnlCol;
+    document.getElementById('pf-pnlpct').textContent=sign+totalPnlPct.toFixed(1)+'%';
+    document.getElementById('pf-pnlpct').style.color=pnlCol;
+    document.getElementById('price-status').textContent='· '+new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})+' güncellendi';
+
+    // Watchlist fiyatları
+    try{
+      const wlRes=await fetch('/api/prices',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({symbols:WATCHLIST})
+      });
+      const wlPrices=await wlRes.json();
+      WATCHLIST.forEach(t=>{
+        const pr=wlPrices[t];if(!pr)return;
+        const chgCol=pr.changePct>=0?'var(--green)':'var(--red)';
+        const sign=pr.changePct>=0?'+':'';
+        const pEl=document.getElementById('wlp-'+t);
+        if(pEl){pEl.textContent='$'+pr.price.toFixed(2);pEl.style.color=chgCol;}
+        const cEl=document.getElementById('wlch-'+t);
+        if(cEl){cEl.textContent=sign+pr.changePct.toFixed(2)+'%';cEl.style.color=chgCol;}
+        const cEl2=document.getElementById('wlc-'+t);
+        if(cEl2){
+          const chgSign=pr.change>=0?'+':'';
+          cEl2.innerHTML=`<span style="color:${chgCol}">${chgSign}$${pr.change.toFixed(2)}</span> · önceki kapanış $${pr.prevClose.toFixed(2)}`;
+        }
+      });
+      document.getElementById('wl-status').textContent='· güncellendi';
+    }catch{}
+  }catch(e){
+    document.getElementById('price-status').textContent='· fiyat alınamadı';
+  }
+}
+
+// TASKS
+function renderTasks(){
+  document.getElementById('inputbar').style.display='none';
+  const p=STATE.tasks.filter(t=>!t.done).length;
+  document.getElementById('view').innerHTML=`<div class="pad">
+    <div class="sec-hdr">Görevler · ${p} bekliyor</div>
+    <input class="task-add" id="newtask" placeholder="+ Yeni görev yazıp Enter'a bas"/>
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap" id="tag-btns">
+      ${[['Tümü','','var(--sub)'],['portföy','portföy','var(--red)'],['malatya','malatya','var(--yellow)'],['koolseed','koolseed','var(--green)'],['yoppy','yoppy','var(--orange)'],['snackkie','snackkie','var(--accent)'],['morty','morty','var(--purple)']].map(([l,v,c])=>`<button onclick="filterTasks('${v}')" style="padding:3px 9px;border-radius:20px;font-size:10px;font-family:var(--mono);background:${c}22;color:${c};border:1px solid ${c}44;cursor:pointer">${l}</button>`).join('')}
+    </div>
+    <div class="task-list" id="tasklist"></div>
+    <div style="height:20px"></div>
+  </div>`;
+  STATE.taskFilter='';
+  renderTaskList();
+  document.getElementById('newtask').addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&e.target.value.trim()){
+      STATE.tasks.unshift({id:Date.now(),text:e.target.value.trim(),done:false,tag:'görev',col:'var(--accent)'});
+      e.target.value='';renderTaskList();
+      renderTasks();
+    }
+  });
+}
+
+function filterTasks(tag){
+  STATE.taskFilter=tag;
+  renderTaskList();
+}
+
+function renderTaskList(){
+  const tl=document.getElementById('tasklist');if(!tl)return;
+  const filter=STATE.taskFilter||'';
+  const tasks=filter?STATE.tasks.filter(t=>t.tag===filter):STATE.tasks;
+  tl.innerHTML=tasks.map(t=>`<div class="task-row" id="tr-${t.id}" style="transition:all .3s;${t.done?'opacity:.4':''}">
+    <div class="chk ${t.done?'done':''}" onclick="toggleTask(${t.id})">${t.done?'✓':''}</div>
+    <div class="task-txt ${t.done?'done':''}" style="flex:1">${t.text}</div>
+    <span class="ttag" style="background:${t.col}22;color:${t.col};border:1px solid ${t.col}44;margin-right:4px">${t.tag}</span>
+    <div onclick="deleteTask(${t.id})" style="color:var(--sub);font-size:16px;cursor:pointer;padding:0 4px;flex-shrink:0">×</div>
+  </div>`).join('');
+}
+
+function toggleTask(id){
+  const t=STATE.tasks.find(t=>t.id===id);
+  if(!t)return;
+  if(t.done){
+    // Zaten tamamlanmış — kaldır
+    const el=document.getElementById('tr-'+id);
+    if(el){el.style.opacity='0';el.style.transform='translateX(100px)';}
+    setTimeout(()=>{
+      STATE.tasks=STATE.tasks.filter(t=>t.id!==id);
+      renderTaskList();
+    },300);
+  } else {
+    // Tamamla ve 1.5 saniye sonra kaldır
+    STATE.tasks=STATE.tasks.map(t=>t.id===id?{...t,done:true}:t);
+    renderTaskList();
+    setTimeout(()=>{
+      const el=document.getElementById('tr-'+id);
+      if(el){el.style.opacity='0';el.style.transform='translateX(100px)';}
+      setTimeout(()=>{
+        STATE.tasks=STATE.tasks.filter(t=>t.id!==id);
+        renderTaskList();
+        // Header'ı güncelle
+        const hdr=document.querySelector('.sec-hdr');
+        if(hdr)hdr.textContent='Görevler · '+STATE.tasks.filter(t=>!t.done).length+' bekliyor';
+      },300);
+    },1200);
+  }
+}
+
+function deleteTask(id){
+  const el=document.getElementById('tr-'+id);
+  if(el){el.style.opacity='0';el.style.transform='translateX(100px)';}
+  setTimeout(()=>{
+    STATE.tasks=STATE.tasks.filter(t=>t.id!==id);
+    renderTaskList();
+  },300);
+}
+
+// CALENDAR
+function renderCalendar(){
+  document.getElementById('inputbar').style.display='none';
+  const today=new Date();
+  const days=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+  const months=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+  // Bu haftanın günleri
+  const weekDays=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(today);
+    d.setDate(today.getDate()-today.getDay()+i+1); // Pazartesi başlangıç
+    weekDays.push(d);
+  }
+
+  const quickCmds=[
+    {icon:'📅',label:'Etkinlik Ekle',hint:'Takvime ekle: '},
+    {icon:'🔍',label:'Bu Hafta Ne Var?',hint:'Google Calendar\'ımda bu hafta ne var?'},
+    {icon:'🏢',label:'İş Toplantısı',hint:'İş toplantısı ekle takvime: '},
+    {icon:'🌱',label:'Koolseed Toplantısı',hint:'Koolseed Salı 12:00 toplantısını takvime ekle'},
+    {icon:'🐾',label:'Morty Vet',hint:'Morty veteriner randevusu takvime ekle: '},
+    {icon:'💊',label:'Morty İlaç',hint:'Morty aylık iç parazit ilacı hatırlatıcısı kur'},
+    {icon:'🔔',label:'Hatırlatıcı Kur',hint:'Hatırlatıcı kur: '},
+    {icon:'✉',label:'Mail Yaz',hint:'Mail taslağı yaz: '},
+  ];
+
+  document.getElementById('view').innerHTML=`<div class="pad">
+    <div class="sec-hdr">Takvim & Ajanda</div>
+
+    <!-- Bu Hafta -->
+    <div style="display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px">
+      ${weekDays.map(d=>{
+        const isToday=d.toDateString()===today.toDateString();
+        const dateStr=d.getDate()+' '+months[d.getMonth()];
+        const bg=isToday?'var(--accent)':'var(--panel)';
+        const bc=isToday?'var(--accent)':'var(--border)';
+        const dc=isToday?'#fff':'var(--text)';
+        const sc=isToday?'rgba(255,255,255,.8)':'var(--sub)';
+        const sc2=isToday?'rgba(255,255,255,.7)':'var(--sub)';
+        return '<div style="flex-shrink:0;width:44px;text-align:center;background:'+bg+';border:1px solid '+bc+';border-radius:10px;padding:7px 4px;cursor:pointer" onclick="openClaude(\''+dateStr+' tarihindeki etkinliklerimi goster\')">'
+          +'<div style="font-size:9px;font-family:var(--mono);color:'+sc+'">'+days[d.getDay()].slice(0,3)+'</div>'
+          +'<div style="font-size:15px;font-weight:700;color:'+dc+';margin-top:2px">'+d.getDate()+'</div>'
+          +'<div style="font-size:8px;font-family:var(--mono);color:'+sc2+'">'+months[d.getMonth()].slice(0,3)+'</div>'
+          +'</div>';
+      }).join('')}
+    </div>
+
+    <!-- Bugün -->
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-hdr"><span class="card-icon">📅</span><span class="card-title">Bugün · ${today.getDate()} ${months[today.getMonth()]} ${days[today.getDay()]}</span></div>
+      <div class="card-body">
+        <p style="color:var(--sub);font-size:12px">Etkinlikleri görmek için Claude'a sor →</p>
+        <button onclick="openClaude('Google Calendarimda bugun ne var? Tum etkinlikleri listele.')" style="margin-top:6px;padding:9px 14px;border-radius:9px;background:rgba(123,111,250,.15);border:1px solid rgba(123,111,250,.3);color:var(--accent);font-size:12px;font-family:var(--font);cursor:pointer;width:100%">
+          📋 Bugünkü Etkinlikleri Göster
+        </button>
+      </div>
+    </div>
+
+    <!-- Hızlı Aksiyonlar -->
+    <div class="sec-hdr">Hızlı Aksiyonlar</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      ${quickCmds.map(c=>`<div onclick="openClaude('${c.hint}')" style="background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:12px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .2s" ontouchstart="this.style.opacity='.7'" ontouchend="this.style.opacity='1'">
+        <span style="font-size:20px">${c.icon}</span>
+        <span style="font-size:11px;font-weight:500">${c.label}</span>
+      </div>`).join('')}
+    </div>
+
+    <!-- Sabit Programlar -->
+    <div class="sec-hdr">Sabit Program</div>
+    <div class="card">
+      <div class="card-body" style="display:flex;flex-direction:column;gap:8px">
+        ${[
+          {d:'Her Salı 12:00',t:'🌱 Koolseed Online Toplantı',col:'var(--green)'},
+          {d:'Her Pazartesi',t:'📊 Koolseed Haftalık Takip',col:'var(--green)'},
+          {d:'Her Salı',t:'🥜 Yoppy / Bulgaristan Takip',col:'var(--orange)'},
+          {d:'Her Pazar',t:'🏭 Malatya Pazarı Fabrika',col:'var(--yellow)'},
+          {d:'Her ayın 1\'i',t:'📈 Koolseed Aylık Yatırım',col:'var(--cyan)'},
+          {d:'Her ay',t:'🐾 Morty Anti-parazit',col:'var(--purple)'},
+          {d:'Her 3 ayda bir',t:'🦷 Morty Diş Temizliği',col:'var(--purple)'},
+          {d:'Her yıl Eylül',t:'💉 Morty Yıllık Aşılar',col:'var(--purple)'},
+        ].map(e=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(26,38,56,.4)" onclick="openClaude('${e.t} hakkında bilgi ver veya takvimde göster')">
+          <div style="width:3px;height:32px;border-radius:2px;background:${e.col};flex-shrink:0"></div>
+          <div>
+            <div style="font-size:12px;font-weight:500">${e.t}</div>
+            <div style="font-size:10px;color:var(--sub);font-family:var(--mono)">${e.d}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Claude Bridge -->
+    <div style="margin-top:12px;background:var(--panel);border:1px solid rgba(123,111,250,.2);border-radius:13px;padding:14px;">
+      <div style="font-size:10px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">◈ Takvim aksiyonları Claude'da gerçekleşir</div>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:10px">Etkinlik görme, ekleme, düzenleme, silme — hepsi Claude sohbetinde direkt yapılıyor.</div>
+      <a href="${CLAUDE_URL}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--cyan));color:#fff;font-size:13px;font-weight:600;text-decoration:none">
+        ◈ Claude'u Aç — Takvim & Ajanda
+      </a>
+    </div>
+    <div style="height:20px"></div>
+  </div>`;
+}
+
+// COMPANIES
+function renderCompanies(){
+  document.getElementById('inputbar').style.display='none';
+  const saved=JSON.parse(localStorage.getItem('nexus_co_tasks')||'{}');
+
+  document.getElementById('view').innerHTML=`<div class="pad">
+    <div class="sec-hdr">Şirketlerim</div>
+    ${COMPANIES.map(c=>{
+      const cTasks=saved[c.id]||c.tasks.map(t=>({text:t,done:false}));
+      return `<div class="card" style="margin-bottom:12px;border-color:${c.col}33">
+        <div class="card-hdr" style="background:${c.col}11">
+          <span style="font-size:20px">${c.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:var(--text)">${c.name}</div>
+            <div style="font-size:10px;color:${c.col};font-family:var(--mono)">${c.role}</div>
+          </div>
+          ${c.web?`<a href="${c.web}" target="_blank" style="font-size:10px;color:var(--sub);text-decoration:none;font-family:var(--mono)">↗</a>`:''}
+        </div>
+        <div style="padding:10px 14px;font-size:12px;color:var(--sub);border-bottom:1px solid var(--border)">${c.desc}${c.meeting?` · <span style="color:var(--yellow)">🔔 ${c.meeting}</span>`:''}</div>
+        <div style="padding:8px 14px">
+          <div style="font-size:10px;font-family:var(--mono);color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Görevler</div>
+          ${cTasks.map((t,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(26,38,56,.3)">
+            <div onclick="toggleCoTask('${c.id}',${i})" style="width:16px;height:16px;border-radius:4px;border:1.5px solid ${t.done?c.col:'var(--muted)'};background:${t.done?c.col:'none'};cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:#000;flex-shrink:0">${t.done?'✓':''}</div>
+            <div style="flex:1;font-size:12px;${t.done?'text-decoration:line-through;color:var(--sub)':''}">${t.text}</div>
+          </div>`).join('')}
+          <input onkeydown="addCoTask(event,'${c.id}')" placeholder="+ Görev ekle" style="width:100%;margin-top:8px;background:none;border:none;border-bottom:1px dashed var(--border);outline:none;color:var(--sub);font-size:12px;padding:4px 0;font-family:var(--font)"/>
+        </div>
+        <div style="padding:8px 14px;display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="openClaude('${c.name} için analiz yap')" style="padding:6px 10px;border-radius:8px;background:${c.col}15;border:1px solid ${c.col}33;color:${c.col};font-size:11px;font-family:var(--font);cursor:pointer">📊 Analiz</button>
+          <button onclick="openClaude('${c.name} için mail taslağı yaz')" style="padding:6px 10px;border-radius:8px;background:rgba(0,207,255,.1);border:1px solid rgba(0,207,255,.2);color:var(--cyan);font-size:11px;font-family:var(--font);cursor:pointer">✉ Mail</button>
+          <button onclick="openClaude('${c.name} için takvime toplantı ekle')" style="padding:6px 10px;border-radius:8px;background:rgba(0,245,156,.1);border:1px solid rgba(0,245,156,.2);color:var(--green);font-size:11px;font-family:var(--font);cursor:pointer">📅 Toplantı</button>
+        </div>
+      </div>`;
+    }).join('')}
+    <div style="height:20px"></div>
+  </div>`;
+}
+
+function toggleCoTask(cid,idx){
+  const saved=JSON.parse(localStorage.getItem('nexus_co_tasks')||'{}');
+  const c=COMPANIES.find(x=>x.id===cid);
+  if(!saved[cid])saved[cid]=c.tasks.map(t=>({text:t,done:false}));
+  saved[cid][idx].done=!saved[cid][idx].done;
+  localStorage.setItem('nexus_co_tasks',JSON.stringify(saved));
+  renderCompanies();
+}
+
+function addCoTask(e,cid){
+  if(e.key!=='Enter'||!e.target.value.trim())return;
+  const saved=JSON.parse(localStorage.getItem('nexus_co_tasks')||'{}');
+  const c=COMPANIES.find(x=>x.id===cid);
+  if(!saved[cid])saved[cid]=c.tasks.map(t=>({text:t,done:false}));
+  saved[cid].push({text:e.target.value.trim(),done:false});
+  localStorage.setItem('nexus_co_tasks',JSON.stringify(saved));
+  e.target.value='';
+  renderCompanies();
+}
+
+// BIRTHDAYS
+function daysUntil(mmdd){
+  const today=new Date();
+  const [m,d]=mmdd.split('-').map(Number);
+  let next=new Date(today.getFullYear(),m-1,d);
+  if(next<today)next=new Date(today.getFullYear()+1,m-1,d);
+  return Math.ceil((next-today)/(1000*60*60*24));
+}
+
+function renderBirthdays(){
+  document.getElementById('inputbar').style.display='none';
+  const extra=JSON.parse(localStorage.getItem('nexus_birthdays_extra')||'[]');
+  const all=[...BIRTHDAYS_DEFAULT,...extra];
+  const sorted=all.map(b=>({...b,days:daysUntil(b.date)})).sort((a,b)=>a.days-b.days);
+  const months=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+  document.getElementById('view').innerHTML=`<div class="pad">
+    <div class="sec-hdr">Doğum Günleri</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+      ${sorted.map(b=>{
+        const [m,d]=b.date.split('-').map(Number);
+        const dateStr=d+' '+months[m-1];
+        const isToday=b.days===0;
+        const isSoon=b.days<=7&&b.days>0;
+        const col=isToday?'var(--yellow)':isSoon?'var(--green)':'var(--sub)';
+        return `<div style="background:var(--panel);border:1px solid ${isToday?'var(--yellow)':'var(--border)'};border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+          <div style="font-size:26px">${b.emoji||'🎂'}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">${b.name}</div>
+            <div style="font-size:11px;color:var(--sub);font-family:var(--mono)">${dateStr}${b.born?' · '+b.born:''}</div>
+            ${b.note?`<div style="font-size:10px;color:var(--sub)">${b.note}</div>`:''}
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:13px;font-weight:700;font-family:var(--mono);color:${col}">${isToday?'🎉 Bugün':b.days+' gün'}</div>
+            ${isToday?'':'<div style="font-size:9px;color:var(--sub);font-family:var(--mono)">kaldı</div>'}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <button onclick="showAddBirthday()" style="width:100%;padding:12px;border-radius:11px;background:var(--panel);border:1.5px dashed var(--border);color:var(--sub);font-size:13px;font-family:var(--font);cursor:pointer;margin-bottom:12px">+ Doğum Günü Ekle</button>
+    <div id="add-bday-form" style="display:none;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-family:var(--mono);color:var(--sub);margin-bottom:8px">YENİ DOĞUM GÜNÜ</div>
+      <input id="bd-name" placeholder="İsim" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;margin-bottom:8px;font-family:var(--font)"/>
+      <input id="bd-date" placeholder="Tarih (AA-GG örn: 03-15)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;margin-bottom:8px;font-family:var(--font)"/>
+      <input id="bd-emoji" placeholder="Emoji (opsiyonel)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;margin-bottom:8px;font-family:var(--font)"/>
+      <input id="bd-note" placeholder="Not (opsiyonel)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;margin-bottom:10px;font-family:var(--font)"/>
+      <div style="display:flex;gap:8px">
+        <button onclick="saveBirthday()" style="flex:1;padding:10px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--cyan));border:none;color:#fff;font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer">Kaydet</button>
+        <button onclick="document.getElementById('add-bday-form').style.display='none'" style="padding:10px 16px;border-radius:9px;background:var(--bg);border:1px solid var(--border);color:var(--sub);font-size:13px;font-family:var(--font);cursor:pointer">İptal</button>
+      </div>
+    </div>
+    <div style="background:var(--panel);border:1px solid rgba(0,207,255,.2);border-radius:12px;padding:12px 14px">
+      <div style="font-size:10px;font-family:var(--mono);color:var(--cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Google Takvimden Çekildi</div>
+      <div style="font-size:11px;color:var(--sub);line-height:1.5">Senolsun, Naz Demirhisar, Gökçe Oskay, Deniz Sunci takviminden otomatik eklendi. Yeni kişiler için Claude'a "doğum günü takvimimden çek" de.</div>
+    </div>
+    <div style="height:20px"></div>
+  </div>`;
+}
+
+function showAddBirthday(){document.getElementById('add-bday-form').style.display='block';}
+function saveBirthday(){
+  const name=document.getElementById('bd-name').value.trim();
+  const date=document.getElementById('bd-date').value.trim();
+  if(!name||!date){toast('İsim ve tarih gerekli','var(--red)');return;}
+  const emoji=document.getElementById('bd-emoji').value.trim()||'🎂';
+  const note=document.getElementById('bd-note').value.trim();
+  const extra=JSON.parse(localStorage.getItem('nexus_birthdays_extra')||'[]');
+  extra.push({name,date,emoji,note,born:''});
+  localStorage.setItem('nexus_birthdays_extra',JSON.stringify(extra));
+  toast('✓ Eklendi','var(--green)');
+  renderBirthdays();
+}
+
+// PURO
+function renderPuro(){
+  document.getElementById('inputbar').style.display='none';
+  document.getElementById('view').innerHTML=`<div class="pad">
+    <div class="sec-hdr">🥃 Puro Dünyası</div>
+
+    <!-- Hızlı Rehber Kartları -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      ${[
+        {icon:'💪',title:'Güç Seviyeleri',body:'Light · Medium · Full',sub:'Tütün yoğunluğu ve nikotin'},
+        {icon:'🌍',title:'Bölgeler',body:'Küba · Nikaragua · Dom.Rep.',sub:'Honduras · Connecticut'},
+        {icon:'📐',title:'Vitolalar',body:'Robusto · Toro · Churchill',sub:'Torpedo · Perfecto · Lancero'},
+        {icon:'🍃',title:'Wrapper',body:'Connecticut · Maduro · Habano',sub:'Corojo · Cameroon · Oscuro'},
+      ].map(k=>`<div class="card" style="margin-bottom:0">
+        <div class="card-body" style="text-align:center;padding:12px 10px">
+          <div style="font-size:22px;margin-bottom:4px">${k.icon}</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px">${k.title}</div>
+          <div style="font-size:10px;color:var(--accent);font-family:var(--mono)">${k.body}</div>
+          <div style="font-size:10px;color:var(--sub)">${k.sub}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+
+    <!-- Güç Seviyesi Rehberi -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr"><span class="card-icon">💪</span><span class="card-title">Güç Seviyesi Rehberi</span></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:0;padding:0">
+        ${[
+          {g:'Light',col:'var(--green)',orn:'Macanudo Café · Davidoff Grand Cru · CAO Connecticut · H.Upmann Half Corona',ac:'Hafif çay, Prosecco, elma suyu',tanim:'Kremsi, fındıklı, hafif tatlı. Yeni başlayanlar için ideal. Nikotin minimal.'},
+          {g:'Medium',col:'var(--yellow)',orn:'Montecristo No.2 · Romeo y Julieta Churchill · Padrón 1964 · Oliva Serie V Melanio',ac:'Bourbon, aged rum, espresso, Rioja',tanim:'Baharat, sedir, deri notları. En dengeli deneyim. Çoğu puronun bulunduğu bölge.'},
+          {g:'Full',col:'var(--red)',orn:'Cohiba Behike 56 · Liga Privada No.9 · Padrón 1926 No.9 · Bolívar Royal Coronas',ac:'Islay single malt, VSOP konyak, çift espresso',tanim:'Espresso, koyu çikolata, karabiber, duman. Deneyimli içiciler için. Tok karnına için.'},
+        ].map(r=>`<div style="padding:11px 14px;border-bottom:1px solid rgba(26,38,56,.4)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+            <div style="width:10px;height:10px;border-radius:50%;background:${r.col};flex-shrink:0"></div>
+            <div style="font-size:12px;font-weight:700;color:${r.col}">${r.g}</div>
+          </div>
+          <div style="font-size:11px;color:var(--text);margin-bottom:4px">${r.tanim}</div>
+          <div style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-bottom:2px">🥃 ${r.ac}</div>
+          <div style="font-size:10px;color:var(--sub)">Örnek: ${r.orn}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Bölgeler -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr"><span class="card-icon">🌍</span><span class="card-title">Büyük Puro Bölgeleri</span></div>
+      <div class="card-body" style="padding:0">
+        ${[
+          {flag:'🇨🇺',b:'Küba · Vuelta Abajo',profil:'Toprak, sedir, bitkisel, çiçeksi',guc:'Medium',marka:'Cohiba · Montecristo · Partagás · Bolívar · Romeo y Julieta'},
+          {flag:'🇳🇮',b:'Nikaragua · Estelí/Jalapa',profil:'Karabiber, kahve, çikolata, duman',guc:'Medium–Full',marka:'Padrón · Oliva · Liga Privada · My Father · Perdomo'},
+          {flag:'🇩🇴',b:'Dominik Cum. · Cibao Valley',profil:'Krem, vanilya, çiçeksi, parfüm',guc:'Light–Medium',marka:'Davidoff · Arturo Fuente · Opus X'},
+          {flag:'🇭🇳',b:'Honduras · Jamastran',profil:'Deri, kuru meyve, toprak',guc:'Medium–Full',marka:'Rocky Patel · Alec Bradley · Plasencia'},
+          {flag:'🇺🇸',b:'Connecticut Valley',profil:'Shade: krem/fındık · Broadleaf: çikolata',guc:'Light / Full',marka:'Macanudo · Diesel · Liga Privada'},
+        ].map(b=>`<div style="padding:9px 14px;border-bottom:1px solid rgba(26,38,56,.4)">
+          <div style="font-size:13px;font-weight:600;margin-bottom:2px">${b.flag} ${b.b}</div>
+          <div style="font-size:11px;color:var(--accent)">Profil: ${b.profil}</div>
+          <div style="font-size:10px;color:var(--sub)">Güç: ${b.guc} · ${b.marka}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Vitolalar -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr"><span class="card-icon">📐</span><span class="card-title">Vitola Rehberi</span></div>
+      <div class="card-body" style="padding:0">
+        ${[
+          {v:'Robusto',b:'5″×50',s:'45–60 dk',a:'Kısa ama güçlü. Meşgul içicilerin favorisi.'},
+          {v:'Toro',b:'6″×50–52',s:'60–80 dk',a:'Günümüzün en popüler vitolası. Dengeli ve zengin.'},
+          {v:'Churchill',b:'7″×47',s:'60–90 dk',a:'Klasik ve prestijli. Harmanın tam potansiyeli.'},
+          {v:'Torpedo',b:'6–7″×52',s:'60–80 dk',a:'Sivri uç dumanı yoğunlaştırır. Deneyimli için.'},
+          {v:'Corona',b:'5.5″×42',s:'35–50 dk',a:'Küba geleneğinin orijinal standardı.'},
+          {v:'Lancero',b:'7.5″×38',s:'70–90 dk',a:'Çok ince. Wrapper etkisi maksimum.'},
+          {v:'Gordo',b:'6″×60+',s:'90–120 dk',a:'Dev format. Soğuk ve yoğun duman.'},
+          {v:'Perfecto',b:'Değişken',s:'60–120 dk',a:'İki ucu kapalı. En karmaşık profil.'},
+        ].map(v=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid rgba(26,38,56,.4)">
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600">${v.v} <span style="color:var(--sub);font-size:10px;font-family:var(--mono)">${v.b}</span></div>
+            <div style="font-size:11px;color:var(--sub)">${v.a}</div>
+          </div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--cyan);flex-shrink:0">${v.s}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- 35 Premium Puro -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr"><span class="card-icon">🏆</span><span class="card-title">35 Seçkin Puro</span></div>
+      <div class="card-body" style="padding:0">
+        ${[
+          {m:'Cohiba Behike 56',b:'Küba',g:'Full',p:'98',t:'Koyu çikolata · Deri · Toprak'},
+          {m:'Padrón 1926 Serie No.2',b:'Nikaragua',g:'Full',p:'97',t:'Espresso · Çikolata · Deri'},
+          {m:'Oliva Serie V Melanio Toro',b:'Nikaragua',g:'Medium',p:'97',t:'Karamel · Çikolata · Baharat'},
+          {m:'Arturo Fuente Opus X FFOX',b:'Dom.Rep.',g:'Full',p:'97',t:'Kırmızı meyve · Çikolata · Baharat'},
+          {m:'Cohiba Siglo IV',b:'Küba',g:'Medium',p:'96',t:'Krem · Sedir · Baharat'},
+          {m:'Padrón 1926 No.9',b:'Nikaragua',g:'Full',p:'96',t:'Espresso · Koyu çikolata · Duman'},
+          {m:'Liga Privada No.9 Toro',b:'Nikaragua',g:'Full',p:'96',t:'Espresso · Karabiber · Koyu meyve'},
+          {m:'Arturo Fuente Don Carlos',b:'Dom.Rep.',g:'Medium',p:'96',t:'Meyve · Çikolata · Sedir'},
+          {m:'Alec Bradley Prensado',b:'Honduras',g:'Medium',p:'96',t:'Çikolata · Karamel · Fındık'},
+          {m:'Montecristo No.2',b:'Küba',g:'Medium',p:'95',t:'Baharat · Sedir · Toprak'},
+          {m:'Padrón 1964 Anniversary',b:'Nikaragua',g:'Medium',p:'95',t:'Fındık · Kahve · Baharat'},
+          {m:'My Father Le Bijou 1922',b:'Nikaragua',g:'Medium',p:'95',t:'Deri · Kahve · Bitter çikolata'},
+          {m:'Liga Privada Unico Ratzilla',b:'Nikaragua',g:'Full',p:'95',t:'Koyu çikolata · Deri · Karabiber'},
+          {m:'Arturo Fuente Hemingway',b:'Dom.Rep.',g:'Medium',p:'95',t:'Parfüm · Meyve · Sedir'},
+          {m:'Partagás Serie D No.4',b:'Küba',g:'Medium',p:'94',t:'Kakao · Toprak · Deri'},
+          {m:'Davidoff Aniversario No.3',b:'Dom.Rep.',g:'Medium',p:'94',t:'Sedir · Kahve · Deri'},
+          {m:'Oliva Serie V Double Toro',b:'Nikaragua',g:'Full',p:'94',t:'Derin baharat · Espresso · Duman'},
+          {m:'Davidoff Grand Cru No.2',b:'Dom.Rep.',g:'Light',p:'93',t:'Çiçeksi · Krem · Sedir'},
+          {m:'Partagás Lusitanias',b:'Küba',g:'Full',p:'93',t:'Derin tütün · Ahşap · Karabiber'},
+          {m:'Bolívar Royal Coronas',b:'Küba',g:'Full',p:'93',t:'Karabiber · Duman · Meşe'},
+          {m:'Hoyo de Monterrey Epicure',b:'Küba',g:'Medium',p:'93',t:'Odun · Krem · Hafif baharat'},
+          {m:'My Father No.1 Torpedo',b:'Nikaragua',g:'Full',p:'93',t:'Kahve · Derin baharat · Meşe'},
+          {m:'Plasencia Cosecha 149',b:'Nikaragua',g:'Full',p:'93',t:'Derin baharat · Espresso · Toprak'},
+          {m:'Romeo y Julieta Churchill',b:'Küba',g:'Medium',p:'92',t:'Sedir · Çiçeksi · Hafif tatlı'},
+          {m:'Montecristo No.4',b:'Küba',g:'Light',p:'92',t:'Sedir · Fındık · Çiçeksi'},
+          {m:'Rocky Patel Sun Grown Maduro',b:'Honduras',g:'Full',p:'92',t:'Espresso · Koyu meyve · Duman'},
+          {m:'Diesel Unholy Cocktail',b:'Connecticut',g:'Full',p:'91',t:'Maduro · Duman · Koyu çikolata'},
+          {m:'H.Upmann Magnum 50',b:'Küba',g:'Medium',p:'91',t:'Fındık · Krem · Sedir'},
+          {m:'Rocky Patel Vintage 1990',b:'Honduras',g:'Medium',p:'91',t:'Deri · Kahve · Tatlı bitiş'},
+          {m:'Nat Sherman Timeless',b:'Honduras',g:'Medium',p:'91',t:'Krem · Kahve · Vanilya'},
+          {m:'CAO Connecticut Toro',b:'Connecticut',g:'Light',p:'89',t:'Tereyağı · Krem · Fındık'},
+          {m:'Macanudo Café Hyde Park',b:'Connecticut',g:'Light',p:'88',t:'Krem · Vanilya · Hafif tatlı'},
+        ].map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 14px;border-bottom:1px solid rgba(26,38,56,.3)">
+          <div style="font-size:12px;font-weight:700;color:${parseInt(p.p)>=97?'var(--yellow)':parseInt(p.p)>=94?'var(--green)':'var(--sub)'};width:28px;flex-shrink:0;font-family:var(--mono)">${p.p}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.m}</div>
+            <div style="font-size:10px;color:var(--sub)">${p.b} · ${p.g} · ${p.t}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- İçim Ritüeli -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr"><span class="card-icon">🔥</span><span class="card-title">İçim Ritüeli</span></div>
+      <div class="card-body" style="padding:0">
+        ${[
+          {n:'1',a:'Seçim',d:'Ruh haline uygun güç seç. İlk kez isen Light veya Medium başla. Tok karnına iç.'},
+          {n:'2',a:'Muayene',d:'Hafifçe sık — eşit sertlikte olmalı. Wrapper\'ı incele: çatlak veya kuru görünüm kötü.'},
+          {n:'3',a:'Kesim',d:'Cap\'in 1–2mm üstünden tek hamlede temiz kes. Kesici keskin olmalı.'},
+          {n:'4',a:'Cold Draw',d:'Ateşlemeden önce test nefesi çek. Hava geçişi olmalı, tıkanıklık olmamalı.'},
+          {n:'5',a:'Isıtma',d:'Foot\'u alevin birkaç cm yakınında tut — doğrudan değil. Yavaşça döndürerek ısıt.'},
+          {n:'6',a:'Tutuşturma',d:'Aleви yaklaştır, yavaşça çekerek döndür. Sedir çöpü veya bütan çakmak kullan.'},
+          {n:'7',a:'Tempo',d:'Dakikada 1–2 nefes ideal. Çok hızlı içmek acılığa yol açar.'},
+          {n:'8',a:'Söndürme',d:'Son 3–4 cm\'de bırak. Asla ezdirme — doğal sönmeye bırak.'},
+        ].map(s=>`<div style="display:flex;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(26,38,56,.3)">
+          <div style="width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${s.n}</div>
+          <div><div style="font-size:12px;font-weight:600;color:var(--accent)">${s.a}</div><div style="font-size:11px;color:var(--sub);margin-top:2px">${s.d}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- İçecek Eşleştirme - Kapsamlı -->
+    <div class="card" style="margin-bottom:10px">
+      <div class="card-hdr"><span class="card-icon">🥃</span><span class="card-title">İçecek Eşleştirme Rehberi</span></div>
+      <div class="card-body" style="padding:0">
+
+        <div style="padding:10px 14px;background:rgba(255,179,0,.05);border-bottom:1px solid rgba(26,38,56,.4)">
+          <div style="font-size:10px;font-family:var(--mono);color:var(--yellow);margin-bottom:6px">TEMEL KURALLAR</div>
+          ${[
+            {k:'Güç Uyumu',v:'Light puro hafif içecek, Full puro yoğun içecek ister'},
+            {k:'Tatlı Dengeler',v:'Tatlı içecekler puronun bitter notlarını yumuşatır'},
+            {k:'Asit Temizler',v:'Asitli içecekler damağı temizler, yeni katmanlar açar'},
+            {k:'Sıcaklık',v:'Soğuk içecek puro ısısını dengeler — her 3-4 nefeste bir yudum'},
+          ].map(r=>`<div style="font-size:11px;padding:2px 0"><span style="color:var(--accent);font-weight:600">${r.k}:</span> <span style="color:var(--sub)">${r.v}</span></div>`).join('')}
+        </div>
+
+        <div style="padding:6px 14px 2px;font-size:9px;font-family:var(--mono);color:var(--sub);text-transform:uppercase;letter-spacing:1px">🥃 Viski</div>
+        ${[
+          {n:'Islay Single Malt',g:'Full',t:'Torf · Duman · Vanilya',a:'Padrón 1926 · Liga Privada · Bolívar',m:'Laphroaig · Ardbeg · Lagavulin'},
+          {n:'Kentucky Bourbon',g:'Medium',t:'Vanilya · Karamel · Meşe',a:'Cohiba Siglo IV · Partagás D4 · Romeo y Julieta',m:'Woodford Reserve · Buffalo Trace · Makers Mark'},
+          {n:'Speyside / Japon Malt',g:'Light–Med',t:'Elma · Armut · Bal',a:'Davidoff · Macanudo · Arturo Fuente Hemingway',m:'Glenfiddich · Yamazaki · Balvenie'},
+        ].map(d=>`<div style="padding:8px 14px;border-bottom:1px solid rgba(26,38,56,.3)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+            <div style="font-size:12px;font-weight:600">${d.n}</div>
+            <div style="font-size:9px;font-family:var(--mono);color:var(--yellow);background:rgba(255,179,0,.1);padding:1px 5px;border-radius:4px">${d.g}</div>
+          </div>
+          <div style="font-size:10px;color:var(--sub)">${d.m}</div>
+          <div style="font-size:10px;color:var(--accent);margin-top:1px">Tatlar: ${d.t}</div>
+          <div style="font-size:10px;color:var(--sub)">Puro: ${d.a}</div>
+        </div>`).join('')}
+
+        <div style="padding:6px 14px 2px;font-size:9px;font-family:var(--mono);color:var(--sub);text-transform:uppercase;letter-spacing:1px">🍶 Konyak & Ötesi</div>
+        ${[
+          {n:'VSOP / XO Konyak',g:'Med–Full',t:'Kuru üzüm · Meşe · Vanilya',a:'Opus X · Cohiba Behike · Davidoff Aniversario',m:'Hennessy · Remy Martin · Courvoisier'},
+          {n:'Aged Rum / Ron Añejo',g:'Med–Full',t:'Karamel · Tropikal · Vanilya',a:'Cohiba Siglo IV · Montecristo No.2 · Oliva V',m:'Diplomatico · Zacapa 23 · Havana Club'},
+          {n:'Mezcal / Añejo Tequila',g:'Full',t:'Tütsi · Agave · Toprak',a:'Padrón 1926 · Oliva V Double Toro · Liga Privada',m:'Del Maguey · Don Julio 1942 · Ilegal'},
+          {n:'Tawny Port / LBV',g:'Light–Med',t:'Fındık · İncir · Karamel',a:'Davidoff · Macanudo · Romeo y Julieta',m:'Grahams · Fonseca · Taylor Fladgate'},
+        ].map(d=>`<div style="padding:8px 14px;border-bottom:1px solid rgba(26,38,56,.3)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+            <div style="font-size:12px;font-weight:600">${d.n}</div>
+            <div style="font-size:9px;font-family:var(--mono);color:var(--yellow);background:rgba(255,179,0,.1);padding:1px 5px;border-radius:4px">${d.g}</div>
+          </div>
+          <div style="font-size:10px;color:var(--sub)">${d.m}</div>
+          <div style="font-size:10px;color:var(--accent);margin-top:1px">Tatlar: ${d.t}</div>
+          <div style="font-size:10px;color:var(--sub)">Puro: ${d.a}</div>
+        </div>`).join('')}
+
+        <div style="padding:6px 14px 2px;font-size:9px;font-family:var(--mono);color:var(--sub);text-transform:uppercase;letter-spacing:1px">☕ Kahve</div>
+        ${[
+          {n:'Espresso',g:'Med–Full',t:'Kavurma · Bitter · Çikolata',a:'Padrón 1926 · Liga Privada No.9 · Cohiba Behike'},
+          {n:'Türk Kahvesi — Sade',g:'Med–Full',t:'Yoğun · Toprak · Köpüklü',a:'Bolívar Royal Coronas · Partagás Lusitanias · My Father'},
+          {n:'Pour Over / V60',g:'Light–Med',t:'Çiçeksi · Meyvesel · Temiz',a:'Montecristo No.4 · Macanudo Café · Davidoff Grand Cru'},
+          {n:'Cold Brew',g:'Light–Med',t:'Tatlı · Kremsi · Düşük asit',a:'Macanudo Café · CAO Connecticut · H.Upmann Half Corona'},
+          {n:'Flat White',g:'Medium',t:'Kremsi · Sütlü · Dengeli',a:'Cohiba Siglo IV · Davidoff · Arturo Fuente'},
+        ].map(d=>`<div style="padding:8px 14px;border-bottom:1px solid rgba(26,38,56,.3)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+            <div style="font-size:12px;font-weight:600">${d.n}</div>
+            <div style="font-size:9px;font-family:var(--mono);color:var(--cyan);background:rgba(0,207,255,.1);padding:1px 5px;border-radius:4px">${d.g}</div>
+          </div>
+          <div style="font-size:10px;color:var(--accent)">Tatlar: ${d.t}</div>
+          <div style="font-size:10px;color:var(--sub)">Puro: ${d.a}</div>
+        </div>`).join('')}
+
+        <div style="padding:6px 14px 2px;font-size:9px;font-family:var(--mono);color:var(--sub);text-transform:uppercase;letter-spacing:1px">🍵 Çay</div>
+        ${[
+          {n:'Darjeeling 1. Hasat',g:'Light',t:'Muskat · Çiçeksi · Hafif',a:'Montecristo No.4 · Macanudo Café · CAO Connecticut'},
+          {n:'Earl Grey Soğuk',g:'Medium',t:'Bergamot · Narenciye · Çiçeksi',a:'Romeo y Julieta · Oliva Serie V · Davidoff'},
+          {n:'Lapsang Souchong',g:'Full',t:'Duman · Toprak · Deri',a:'Bolívar · Partagás Lusitanias · Liga Privada'},
+          {n:'Pu-erh',g:'Full',t:'Toprak · Mantar · Derin',a:'Bolívar · Cohiba Behike · Padrón 1926'},
+          {n:'Oolong Dong Ding',g:'Medium',t:'Çiçeksi · Kavurma · Şeftali',a:'Cohiba Siglo IV · Oliva Serie V · My Father'},
+          {n:'Hibiskus Soğuk',g:'Tümü',t:'Asit · Meyveli · Ferahlatıcı',a:'Tüm güç seviyeleri — palet temizleyici'},
+        ].map(d=>`<div style="padding:8px 14px;border-bottom:1px solid rgba(26,38,56,.3)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+            <div style="font-size:12px;font-weight:600">${d.n}</div>
+            <div style="font-size:9px;font-family:var(--mono);color:var(--green);background:rgba(0,245,156,.1);padding:1px 5px;border-radius:4px">${d.g}</div>
+          </div>
+          <div style="font-size:10px;color:var(--accent)">Tatlar: ${d.t}</div>
+          <div style="font-size:10px;color:var(--sub)">Puro: ${d.a}</div>
+        </div>`).join('')}
+
+        <div style="padding:6px 14px 2px;font-size:9px;font-family:var(--mono);color:var(--sub);text-transform:uppercase;letter-spacing:1px">💧 Su & Soda</div>
+        ${[
+          {n:'San Pellegrino',t:'Orta karbonatlı · İtalya',g:'Med–Full',a:'Puro dumanını damaktan temizler. Limon dilimiyle mükemmel.'},
+          {n:'Perrier',t:'Kuvvetli karbonatlı · Fransa',g:'Light–Med',a:'Yüksek karbonasyon bitter notları keser, yeni tatlar açar.'},
+          {n:'Evian Still',t:'Still · Fransa (Alp)',g:'Full',a:'Nötr profil. Full body purolarda yoğun aralar için ideal.'},
+          {n:'Voss Still',t:'Ultra saf · Norveç',g:'Premium',a:'Mineral minimum. Cohiba Behike, Opus X için flavor netliği.'},
+        ].map(d=>`<div style="padding:7px 14px;border-bottom:1px solid rgba(26,38,56,.3)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:12px;font-weight:600">${d.n} <span style="font-size:10px;color:var(--sub);font-weight:400">${d.t}</span></div>
+            <div style="font-size:9px;color:var(--sub);font-family:var(--mono)">${d.g}</div>
+          </div>
+          <div style="font-size:10px;color:var(--sub);margin-top:1px">${d.a}</div>
+        </div>`).join('')}
+
+        <div style="padding:6px 14px 2px;font-size:9px;font-family:var(--mono);color:var(--sub);text-transform:uppercase;letter-spacing:1px">🍫 Yiyecek</div>
+        ${[
+          {n:'Bitter Çikolata %70+',g:'Full–Med',a:'Ortak kavurma profili espresso notlarını yansıtır.'},
+          {n:'Sert Peynir (Parmesan)',g:'Med–CT Shade',a:'Yağlı kremsi doku puro dumanını dengeler.'},
+          {n:'Çiğ Kuruyemiş (MP!)',g:'Tümü',a:'Yağlı doku ile uyum kurar. Tuzsuz tercih et.'},
+          {n:'Ham Bal',g:'Light · Macanudo',a:'CT Shade in doğal tatlılığını katar.'},
+          {n:'Zeytinyağlı Kraker',g:'Full · Puro öncesi',a:'Mideyi doldurmadan flavor profilini bozmaz.'},
+        ].map(d=>`<div style="padding:7px 14px;border-bottom:1px solid rgba(26,38,56,.3)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:12px;font-weight:600">${d.n}</div>
+            <div style="font-size:9px;color:var(--sub);font-family:var(--mono)">${d.g}</div>
+          </div>
+          <div style="font-size:10px;color:var(--sub);margin-top:1px">${d.a}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Claude Analiz Butonu -->
+    <div style="background:var(--panel);border:1px solid rgba(123,111,250,.2);border-radius:13px;padding:13px;margin-bottom:20px">
+      <div style="font-size:10px;font-family:var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">◈ Puro Asistanı</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button onclick="openClaude('Bana bir puro öner: [güç tercihin ve içecek eşleştirmeni yaz]')" style="padding:9px;border-radius:9px;background:rgba(123,111,250,.15);border:1px solid rgba(123,111,250,.3);color:var(--accent);font-size:12px;font-family:var(--font);cursor:pointer;text-align:left">🥃 Puro Öner</button>
+        <button onclick="openClaude('Cohiba Siglo IV ile Padrón 1964 arasındaki farkı anlat')" style="padding:9px;border-radius:9px;background:rgba(0,207,255,.1);border:1px solid rgba(0,207,255,.2);color:var(--cyan);font-size:12px;font-family:var(--font);cursor:pointer;text-align:left">📊 İki Puro Karşılaştır</button>
+        <button onclick="openClaude('Puro ansiklopedisinden hümidor kurulumu ve nem kontrolü hakkında detaylı bilgi ver')" style="padding:9px;border-radius:9px;background:rgba(0,245,156,.1);border:1px solid rgba(0,245,156,.2);color:var(--green);font-size:12px;font-family:var(--font);cursor:pointer;text-align:left">🗃 Hümidor Rehberi</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+
+// TAB
+function switchTab(tab){
+  STATE.tab=tab;
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  document.getElementById('inputbar').style.display='none';
+  if(tab==='bulletin')fetchBulletin(false);
+  else if(tab==='chat')renderChat();
+  else if(tab==='companies')renderCompanies();
+  else if(tab==='portfolio')renderPortfolio();
+  else if(tab==='birthdays')renderBirthdays();
+  else if(tab==='morty')renderMorty();
+  else if(tab==='puro')renderPuro();
+  else if(tab==='tasks')renderTasks();
+}
+
+// INPUT
+const inp=document.getElementById('msginput'),btn=document.getElementById('sendbtn');
+inp.addEventListener('input',()=>{btn.disabled=!inp.value.trim()||STATE.loading;inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,100)+'px';});
+inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}});
+btn.addEventListener('click',sendMsg);
+
+switchTab('bulletin');
+</script>
+</body>
+</html>
